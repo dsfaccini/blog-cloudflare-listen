@@ -54,3 +54,11 @@ I need you to make a test page, similar to the homepage, where I can enter a URL
 ## Last considerations
 
 Generally I'd outsource the generation of the audio and the summary to a queue or separate worker but I want to keep this application simple. Nonetheless I'd like to have a feedback on the test page like "audio file is ready now", which we could achieve with a websocket. So the client connects to the worker, the worker fetches the article and maps it to our react components and renders it as soon as it's ready. The websocket comes into play for the "Listen to this article" and "Read a summary" buttons on the page: they should be greyed out if the files aren't ready, and the websocket can tell the client when they're ready so they can activate.
+
+## Development instructions
+
+- use bun as a package manager (i.e. use `bun run ...`)
+- check the `package.json` to know which commands are available.
+- don't manually modify the `cloudflare-env.d.ts`, this is a generated file. Instead, run `bun run cf-typegen`.
+- you may use the links in this file to understand the syntax, parameters, inputs and outputs of the models to use.
+- for any information not contained in this document or otherwise linked in this repo, you may use the `Ref` MCP to research docs. If you don't find the information you're looking for you may use your Web Search tool. Make sure to state beforehand which information you're going to look for, so that you can asses when to stop researching.
