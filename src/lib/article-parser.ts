@@ -466,17 +466,26 @@ function extractCodeLanguage(codeElement: Element | null): string | undefined {
 }
 
 function extractTags(document: Document): string[] {
-  const tags: string[] = [];
+  const tagSet = new Set<string>();
   const tagElements = document.querySelectorAll('a[href^="/tag/"]');
   
   for (const tagElement of tagElements) {
-    const tagText = tagElement.textContent?.trim();
+    let tagText = tagElement.textContent?.trim();
     if (tagText) {
-      tags.push(tagText);
+      // Decode HTML entities and clean up
+      tagText = cleanText(tagText);
+      
+      // Remove trailing commas and extra whitespace
+      tagText = tagText.replace(/,\s*$/, '').trim();
+      
+      // Only add if not empty after cleaning
+      if (tagText) {
+        tagSet.add(tagText);
+      }
     }
   }
   
-  return tags;
+  return Array.from(tagSet);
 }
 
 function inlineElementsToText(elements: InlineElement[]): string {

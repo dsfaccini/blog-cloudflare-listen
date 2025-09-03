@@ -329,8 +329,21 @@ export async function generateSummary(text: string, maxLength = 100): Promise<st
         throw new Error('AI binding not configured');
     }
 
+    const trimmedText = text.trim();
+    
+    // Check if text is empty or too short to meaningfully summarize
+    if (!trimmedText || trimmedText.length < 20) {
+        return `No summarization possible: ${trimmedText}`;
+    }
+
     try {
-        const prompt = `Summarize the following text in ${maxLength} words or less. Be concise and capture the main points:\n\n${text}\n\nSummary:`;
+        const prompt = `Summarize the following text in ${maxLength} words or less. Be concise and capture the main points. If the text is too short or incomplete to summarize meaningfully, return "No summarization possible: <original text>".
+
+<text_to_summarize>
+${trimmedText}
+</text_to_summarize>
+
+Summary:`;
 
         const response = await env.AI.run(
             '@cf/meta/llama-3.2-3b-instruct',
@@ -369,9 +382,20 @@ export async function generateSummary(text: string, maxLength = 100): Promise<st
 export async function generateParagraphSummaries(paragraphs: string[]): Promise<string[]> {
     console.log(`Generating summaries for ${paragraphs.length} paragraphs in parallel...`);
 
+    // Filter out empty or very short paragraphs first
+    const validParagraphs = paragraphs.map((paragraph) => {
+        const trimmed = paragraph.trim();
+        return trimmed.length > 0 ? trimmed : null;
+    });
+
     // Generate all summaries in parallel
-    const summaryPromises = paragraphs.map((paragraph) => {
-        // Skip very short paragraphs
+    const summaryPromises = validParagraphs.map((paragraph) => {
+        // Return null for empty paragraphs
+        if (!paragraph) {
+            return Promise.resolve(null);
+        }
+
+        // Skip very short paragraphs (return as-is)
         if (paragraph.length < 50) {
             return Promise.resolve(paragraph);
         }
@@ -384,7 +408,13 @@ export async function generateParagraphSummaries(paragraphs: string[]): Promise<
     });
 
     const summaries = await Promise.all(summaryPromises);
-    console.log(`Generated ${summaries.length} summaries in parallel`);
+    
+    // Filter out null values and maintain array structure
+    const filteredSummaries = summaries.map((summary, index) => 
+        summary !== null ? summary : paragraphs[index]
+    );
+    
+    console.log(`Generated ${filteredSummaries.length} summaries in parallel`);
 
-    return summaries;
+    return filteredSummaries;
 }
