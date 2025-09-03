@@ -17,15 +17,17 @@ import './globals.css';
 // });
 
 export const metadata: Metadata = {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://getalecs.com'),
+    metadataBase: new URL(
+        process.env.NEXT_PUBLIC_BASE_URL || 'https://blog-cloudflare-listen.dsfapps.workers.dev/',
+    ),
     title: {
-        default: 'alecs',
-        template: '%s | alecs',
+        default: 'Blog Cloudflare Listen',
+        template: '%s | Blog Cloudflare Listen',
     },
-    description: 'AI tools made for you',
+    description: 'Listen to Cloudflare blog articles with AI-generated audio and summaries',
     openGraph: {
-        title: 'alecs',
-        description: 'AI tools made for you',
+        title: 'Blog Cloudflare Listen',
+        description: 'Listen to Cloudflare blog articles with AI-generated audio and summaries',
         type: 'website',
         images: ['/logo.png'],
     },
