@@ -29,12 +29,12 @@ export const metadata: Metadata = {
         title: 'Blog Cloudflare Listen',
         description: 'Listen to Cloudflare blog articles with AI-generated audio and summaries',
         type: 'website',
-        images: ['/logo.png'],
+        images: ['/logo-with-text.png'],
     },
     twitter: {
         card: 'summary_large_image',
         site: '@dasfacc',
-        images: ['/logo.png'],
+        images: ['/logo-with-text.png'],
     },
 };
 
