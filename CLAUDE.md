@@ -57,6 +57,8 @@ Generally I'd outsource the generation of the audio and the summary to a queue o
 
 ## Development instructions
 
+- DON'T OVERENGINEER: fulfill the task as described or approved by me, don't add features and defensive checks we didn't discuss. If you have recommendations about the implementation use the planning phase to ask them in BIG LETTERS so I don't miss your question. If you believe an implementation can be improved leave a comment with "FORDAVID:" explaining your recommendation
+- comments marked with "CLAUTODO" are generally TODOs or NOTEs directed at you.
 - use bun as a package manager (i.e. use `bun run ...`)
 - check the `package.json` to know which commands are available.
 - don't manually modify the `cloudflare-env.d.ts`, this is a generated file. Instead, run `bun run cf-typegen`.

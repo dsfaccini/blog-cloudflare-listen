@@ -3,39 +3,20 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { notFound } from 'next/navigation';
 
 import ArticleDisplay from '@/components/ArticleDisplay';
-import {
-    extractParagraphsForSummary,
-    extractTextForAudio,
-    parseArticle,
-    type ArticleContent,
-} from '@/lib/article-parser';
-import { generateAudio, generateParagraphSummaries } from '@/lib/workers-ai';
+import { type ArticleContent, parseArticle } from '@/lib/article-parser';
 
 interface ArticlePageProps {
     params: Promise<{ slug: string[] }>;
 }
 
-async function fetchArticleFromCloudflare(slug: string): Promise<string> {
+async function fetchArticleFromCloudflare(slug: string) {
     const url = `https://blog.cloudflare.com/${slug}/`;
 
-    try {
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'BlogCloudflareListenBot/1.0',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        return await response.text();
-    } catch (error) {
-        console.error('Error fetching article:', error);
-        throw new Error(
-            `Failed to fetch article: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        );
-    }
+    return await fetch(url, {
+        headers: {
+            'User-Agent': 'BlogCloudflareListenBot/1.0',
+        },
+    });
 }
 
 async function getStoredData(slug: string) {
@@ -49,9 +30,8 @@ async function getStoredData(slug: string) {
     const basePath = `blogs/${slug}`;
 
     try {
-        const [articleObj, audioObj, summaryObj] = await Promise.allSettled([
+        const [articleObj, summaryObj] = await Promise.allSettled([
             bucket.get(`${basePath}/article.json`),
-            bucket.get(`${basePath}/audio.mp3`),
             bucket.get(`${basePath}/summary.json`),
         ]);
 
@@ -60,16 +40,15 @@ async function getStoredData(slug: string) {
                 ? JSON.parse(await articleObj.value.text())
                 : null;
 
-        const hasAudio = audioObj.status === 'fulfilled' && audioObj.value !== null;
         const summary =
             summaryObj.status === 'fulfilled' && summaryObj.value
                 ? JSON.parse(await summaryObj.value.text())
                 : null;
 
-        return { article, hasAudio, summary };
+        return { article, summary };
     } catch (error) {
         console.error('Error accessing R2 storage:', error);
-        return { article: null, hasAudio: false, summary: null };
+        return { article: null, summary: null };
     }
 }
 
@@ -115,29 +94,8 @@ async function storeArticleData(
     }
 }
 
-async function processArticleInBackground(slug: string, article: ArticleContent) {
-    try {
-        const textForAudio = extractTextForAudio(article);
-        const paragraphsForSummary = extractParagraphsForSummary(article);
-
-        // Generate audio and summaries in parallel
-        const [audioBuffer, summaries] = await Promise.all([
-            generateAudio(textForAudio).catch((error) => {
-                console.error('Audio generation failed:', error);
-                return null;
-            }),
-            generateParagraphSummaries(paragraphsForSummary).catch((error) => {
-                console.error('Summary generation failed:', error);
-                return null;
-            }),
-        ]);
-
-        // Store the generated content
-        await storeArticleData(slug, article, audioBuffer || undefined, summaries || undefined);
-    } catch (error) {
-        console.error('Background processing failed:', error);
-    }
-}
+// Background processing has been moved to WebSocket endpoint
+// This function is no longer used but kept for reference
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
     const resolvedParams = await params;
@@ -151,29 +109,45 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         // First check if we have cached data
         const storedData = await getStoredData(slug);
         let { article } = storedData;
-        const { hasAudio, summary } = storedData;
+        const { summary } = storedData;
 
         // If no cached article, fetch and parse it
         if (!article) {
             console.log(`Fetching article: ${slug}`);
-            const html = await fetchArticleFromCloudflare(slug);
+            const htmlResponse = await fetchArticleFromCloudflare(slug);
+            if (htmlResponse.status === 404) {
+                console.log(`Article not found for "${slug}"`);
+                return notFound();
+            }
+            const html = await htmlResponse.text();
+
+            // Store raw HTML first
+            const basePath = `blogs/${slug}`;
+            const { env } = await getCloudflareContext();
+            const bucket = env.BLOG_STORAGE;
+            if (bucket) {
+                await bucket.put(`${basePath}/raw.html`, html, {
+                    httpMetadata: { contentType: 'text/html' },
+                });
+            }
+
             article = parseArticle(html);
 
             if (!article || !article.title) {
                 console.error('Failed to parse article or article is invalid');
-                notFound();
+                return notFound();
             }
 
-            // Store the parsed article immediately and start background processing
+            // Store only the parsed article
             await storeArticleData(slug, article);
-            processArticleInBackground(slug, article); // Fire and forget
+            
+            // Audio and summary are now generated on-demand when requested
         }
 
         return (
             <ArticleDisplay
                 article={article}
                 slug={slug}
-                initialAudioAvailable={hasAudio}
                 initialSummary={summary?.summaries || null}
             />
         );

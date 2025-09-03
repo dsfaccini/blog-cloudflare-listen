@@ -1,4 +1,4 @@
-import Logo from './Logo';
+import CloudflareAudioLogo from './CloudflareAudioLogo';
 
 export const Footer = () => {
     return (
@@ -7,23 +7,25 @@ export const Footer = () => {
                 {/* Mobile layout: stacked vertically */}
                 <div className="flex flex-col items-center space-y-4 md:hidden">
                     <div className="flex flex-col items-center space-y-2">
-                        <Logo />
-                        <p className="text-foreground/60 text-xs">An AI-first company</p>
+                        <CloudflareAudioLogo />
                     </div>
+                    <p className="text-foreground/60 text-xs">
+                        The Blog Cloudflare Listen is a hobby project created by @dasfacc
+                    </p>
                     <span className="text-center text-sm text-gray-500">
-                        &copy; {new Date().getFullYear()} getalecs.com. All rights reserved.
+                        {new Date().getFullYear()}
                     </span>
                 </div>
 
                 {/* Desktop layout: logo left, copyright right */}
                 <div className="hidden md:flex md:items-center md:justify-between">
                     <div className="flex items-center space-x-3">
-                        <Logo />
-                        <p className="text-foreground/60 text-sm">An AI-first company</p>
+                        <CloudflareAudioLogo />
                     </div>
-                    <span className="text-sm text-gray-500">
-                        &copy; {new Date().getFullYear()} getalecs.com. All rights reserved.
-                    </span>
+                    <p className="text-foreground/60 text-sm">
+                        The Blog Cloudflare Listen is a hobby project created by @dasfacc
+                    </p>
+                    <span className="text-sm text-gray-500">{new Date().getFullYear()}</span>
                 </div>
             </div>
         </footer>

@@ -7,12 +7,10 @@ import { Play, Pause, Volume2, Loader2 } from 'lucide-react';
 
 interface AudioPlayerProps {
     slug: string;
-    available: boolean;
-    loading: boolean;
     title: string;
 }
 
-export default function AudioPlayer({ slug, available, loading, title }: AudioPlayerProps) {
+export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -27,12 +25,12 @@ export default function AudioPlayer({ slug, available, loading, title }: AudioPl
     };
 
     const togglePlayPause = async () => {
-        if (!available || !audioRef.current) return;
+        if (!audioRef.current) return;
 
         if (!audioRef.current.src) {
             setIsLoadingAudio(true);
             try {
-                // Load the audio file
+                // Load the audio file - it will be generated if it doesn't exist
                 audioRef.current.src = `/api/audio/${slug}`;
                 audioRef.current.load();
             } catch (error) {
@@ -90,15 +88,14 @@ export default function AudioPlayer({ slug, available, loading, title }: AudioPl
         }
     }, [volume]);
 
-    const canPlay = available && !loading;
-    const showLoader = loading || isLoadingAudio;
+    const showLoader = isLoadingAudio;
 
     return (
         <div className="space-y-4">
             <div className="flex items-center space-x-4">
                 <Button
                     onClick={togglePlayPause}
-                    disabled={!canPlay || showLoader}
+                    disabled={showLoader}
                     size="lg"
                     className="w-12 h-12 rounded-full"
                 >
@@ -116,7 +113,7 @@ export default function AudioPlayer({ slug, available, loading, title }: AudioPl
                         {title}
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                        {canPlay ? 'Ready to play' : loading ? 'Generating audio...' : 'Audio unavailable'}
+                        {showLoader ? 'Generating audio...' : 'Ready to play'}
                     </p>
                 </div>
                 
@@ -132,7 +129,7 @@ export default function AudioPlayer({ slug, available, loading, title }: AudioPl
                 </div>
             </div>
             
-            {canPlay && duration > 0 && (
+            {!showLoader && duration > 0 && (
                 <div className="space-y-2">
                     <Slider
                         value={[currentTime]}

@@ -18,7 +18,7 @@
  * const paragraphs = extractParagraphsForSummary(articleContent);
  * ```
  */
-import { JSDOM } from 'jsdom';
+import { parseHTML } from 'linkedom';
 
 export enum BlockType {
   HEADING = 'heading',
@@ -87,8 +87,7 @@ export interface ArticleContent {
  */
 export function parseArticle(html: string): ArticleContent {
   try {
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
+    const { document } = parseHTML(html);
     const article = document.querySelector('article');
     
     if (!article) {

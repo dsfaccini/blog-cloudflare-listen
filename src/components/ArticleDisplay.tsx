@@ -2,9 +2,8 @@
 
 import { BookOpen, ExternalLink } from 'lucide-react';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import Image from 'next/image';
 import Link from 'next/link';
 
 import ArticleContent from '@/components/ArticleContent';
@@ -19,60 +18,41 @@ import type { ArticleContent as ArticleContentType } from '@/lib/article-parser'
 interface ArticleDisplayProps {
     article: ArticleContentType;
     slug: string;
-    initialAudioAvailable: boolean;
     initialSummary: string[] | null;
 }
 
 export default function ArticleDisplay({
     article,
     slug,
-    initialAudioAvailable,
     initialSummary,
 }: ArticleDisplayProps) {
-    const [audioAvailable, setAudioAvailable] = useState(initialAudioAvailable);
     const [summaries, setSummaries] = useState<string[] | null>(initialSummary);
-    const [isAudioLoading, setIsAudioLoading] = useState(!initialAudioAvailable);
-    const [isSummaryLoading, setIsSummaryLoading] = useState(!initialSummary);
+    const [isSummaryLoading, setIsSummaryLoading] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
 
-    // WebSocket connection for real-time updates
-    useEffect(() => {
-        if (audioAvailable && summaries) return; // Already have everything
+    const fetchSummaries = async () => {
+        if (summaries || isSummaryLoading) return; // Already have summaries or loading
 
-        // For now, poll every 5 seconds to check if audio/summary is ready
-        // TODO: Replace with WebSocket implementation
-        const pollInterval = setInterval(async () => {
-            try {
-                const response = await fetch(`/api/article-status/${slug}`);
-                if (response.ok) {
-                    const status = (await response.json()) as {
-                        audioReady: boolean;
-                        summaryReady: boolean;
-                        summaries: string[] | null;
-                    };
-
-                    if (status.audioReady && !audioAvailable) {
-                        setAudioAvailable(true);
-                        setIsAudioLoading(false);
-                    }
-
-                    if (status.summaryReady && !summaries) {
-                        setSummaries(status.summaries);
-                        setIsSummaryLoading(false);
-                    }
-
-                    // Stop polling if we have everything
-                    if (status.audioReady && status.summaryReady) {
-                        clearInterval(pollInterval);
-                    }
-                }
-            } catch (error) {
-                console.error('Error checking article status:', error);
+        setIsSummaryLoading(true);
+        try {
+            const response = await fetch(`/api/summary/${slug}`);
+            if (response.ok) {
+                const data = await response.json() as { summaries: string[]; cached?: boolean };
+                setSummaries(data.summaries);
+            } else {
+                console.error('Failed to fetch summaries');
             }
-        }, 5000);
+        } catch (error) {
+            console.error('Error fetching summaries:', error);
+        } finally {
+            setIsSummaryLoading(false);
+        }
+    };
 
-        return () => clearInterval(pollInterval);
-    }, [slug, audioAvailable, summaries]);
+    const handleShowSummary = () => {
+        setShowSummary(true);
+        fetchSummaries(); // Fetch summaries when drawer opens
+    };
 
     const originalUrl = `https://blog.cloudflare.com/${slug}/`;
 
@@ -99,25 +79,43 @@ export default function ArticleDisplay({
             <main className="container mx-auto max-w-4xl px-4 py-8">
                 {/* Article Header */}
                 <div className="mb-8">
-                    {article.heroImage && (
-                        <div className="mb-6">
-                            <Image
-                                src={article.heroImage.src}
-                                alt={article.heroImage.alt || article.title}
-                                className="w-full rounded-lg shadow-lg"
-                            />
-                        </div>
-                    )}
-
-                    <h1 className="mb-4 text-3xl font-bold md:text-4xl lg:text-5xl">
+                    <h1
+                        className="mb-4 text-3xl font-bold md:text-4xl lg:text-5xl"
+                        style={{
+                            fontFamily:
+                                '-apple-system, "system-ui", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif',
+                            fontWeight: 700,
+                            color: 'rgb(54, 57, 58)',
+                        }}
+                    >
                         {article.title}
                     </h1>
 
                     {article.description && (
-                        <p className="text-muted-foreground mb-6 text-xl">{article.description}</p>
+                        <p
+                            className="text-muted-foreground mb-6 text-xl"
+                            style={{
+                                fontFamily:
+                                    '-apple-system, "system-ui", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif',
+                                fontWeight: 400,
+                                color: 'rgb(54, 57, 58)',
+                                fontSize: '20px',
+                                lineHeight: '32px',
+                            }}
+                        >
+                            {article.description}
+                        </p>
                     )}
 
-                    <div className="text-muted-foreground mb-6 flex flex-wrap items-center gap-4 text-sm">
+                    <div
+                        className="text-muted-foreground mb-6 flex flex-wrap items-center gap-4 text-sm"
+                        style={{
+                            fontFamily:
+                                '-apple-system, "system-ui", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif',
+                            fontWeight: 400,
+                            color: 'rgb(54, 57, 58)',
+                        }}
+                    >
                         {article.publishDate && (
                             <time dateTime={article.publishDate}>
                                 {new Date(article.publishDate).toLocaleDateString('en-US', {
@@ -133,7 +131,15 @@ export default function ArticleDisplay({
                                 <span>by</span>
                                 {article.authors.map((author, index: number) => (
                                     <span key={author.name}>
-                                        {author.name}
+                                        <a
+                                            href={`https://blog.cloudflare.com${author.href}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="hover:underline"
+                                            style={{ color: 'inherit' }}
+                                        >
+                                            {author.name}
+                                        </a>
                                         {index < article.authors.length - 1 && ', '}
                                     </span>
                                 ))}
@@ -160,14 +166,12 @@ export default function ArticleDisplay({
                         <div className="flex-1">
                             <AudioPlayer
                                 slug={slug}
-                                available={audioAvailable}
-                                loading={isAudioLoading}
                                 title={article.title}
                             />
                         </div>
 
                         <Button
-                            onClick={() => setShowSummary(true)}
+                            onClick={handleShowSummary}
                             disabled={isSummaryLoading}
                             variant="outline"
                             className="sm:w-auto"
