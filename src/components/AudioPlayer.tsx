@@ -15,7 +15,9 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
-    const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+    const [isLoadingAudio, setIsLoadingAudio] = useState(true);
+    const [audioError, setAudioError] = useState<string | null>(null);
+    const [audioReady, setAudioReady] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
 
     const formatTime = (time: number) => {
@@ -25,20 +27,7 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
     };
 
     const togglePlayPause = async () => {
-        if (!audioRef.current) return;
-
-        if (!audioRef.current.src) {
-            setIsLoadingAudio(true);
-            try {
-                // Load the audio file - it will be generated if it doesn't exist
-                audioRef.current.src = `/api/audio/${slug}`;
-                audioRef.current.load();
-            } catch (error) {
-                console.error('Error loading audio:', error);
-                setIsLoadingAudio(false);
-                return;
-            }
-        }
+        if (!audioRef.current || !audioReady) return;
 
         if (isPlaying) {
             audioRef.current.pause();
@@ -47,6 +36,7 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
                 await audioRef.current.play();
             } catch (error) {
                 console.error('Error playing audio:', error);
+                setAudioError('Failed to play audio');
             }
         }
     };
@@ -61,7 +51,14 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
         if (audioRef.current) {
             setDuration(audioRef.current.duration);
             setIsLoadingAudio(false);
+            setAudioReady(true);
         }
+    };
+
+    const handleError = () => {
+        setIsLoadingAudio(false);
+        setAudioReady(false);
+        setAudioError('Failed to load audio');
     };
 
     const handlePlay = () => setIsPlaying(true);
@@ -88,6 +85,29 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
         }
     }, [volume]);
 
+    // Preload audio on component mount
+    useEffect(() => {
+        const preloadAudio = async () => {
+            if (!audioRef.current) return;
+
+            try {
+                setIsLoadingAudio(true);
+                setAudioError(null);
+                
+                // Preload the audio - it will be generated if it doesn't exist
+                audioRef.current.src = `/api/audio/${slug}`;
+                audioRef.current.load();
+            } catch (error) {
+                console.error('Error preloading audio:', error);
+                setAudioError('Failed to load audio');
+                setIsLoadingAudio(false);
+                setAudioReady(false);
+            }
+        };
+
+        preloadAudio();
+    }, [slug]);
+
     const showLoader = isLoadingAudio;
 
     return (
@@ -95,7 +115,7 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
             <div className="flex items-center space-x-4">
                 <Button
                     onClick={togglePlayPause}
-                    disabled={showLoader}
+                    disabled={showLoader || audioError !== null}
                     size="lg"
                     className="w-12 h-12 rounded-full"
                 >
@@ -113,8 +133,13 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
                         {title}
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                        {showLoader ? 'Generating audio...' : 'Ready to play'}
+                        {showLoader ? 'Generating audio...' : audioError ? 'Audio unavailable' : 'Ready to play'}
                     </p>
+                    {audioError && (
+                        <p className="text-xs text-red-500 mt-1">
+                            {audioError}
+                        </p>
+                    )}
                 </div>
                 
                 <div className="flex items-center space-x-2 min-w-0">
@@ -152,6 +177,7 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
                 onPlay={handlePlay}
                 onPause={handlePause}
                 onEnded={() => setIsPlaying(false)}
+                onError={handleError}
                 preload="none"
             />
         </div>

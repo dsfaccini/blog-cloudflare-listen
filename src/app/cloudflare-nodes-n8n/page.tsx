@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 import GithubButton from '@/components/GithubButton';
-import Logo from '@/components/Logo';
+import CloudflareAudioLogo from '@/components/CloudflareAudioLogo';
 import NpmButton from '@/components/NpmButton';
 import { Card } from '@/components/ui/card';
 import { CopyToClipboard } from '@/components/ui/copy-to-clipboard';
@@ -37,7 +37,7 @@ const CloudflareNodesN8n = () => {
             {/* Header with Logo */}
             <div className="container mx-auto px-4 py-6">
                 <Link href="/" className="inline-block">
-                    <Logo width={78} height={36} className="transition-opacity hover:opacity-80" />
+                    <CloudflareAudioLogo size={36} />
                 </Link>
             </div>
 

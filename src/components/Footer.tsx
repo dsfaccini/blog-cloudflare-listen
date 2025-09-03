@@ -7,7 +7,7 @@ export const Footer = () => {
                 {/* Mobile layout: stacked vertically */}
                 <div className="flex flex-col items-center space-y-4 md:hidden">
                     <div className="flex flex-col items-center space-y-2">
-                        <CloudflareAudioLogo />
+                        <CloudflareAudioLogo size={100} />
                     </div>
                     <p className="text-foreground/60 text-xs">
                         The Blog Cloudflare Listen is a hobby project created by @dasfacc
@@ -20,7 +20,7 @@ export const Footer = () => {
                 {/* Desktop layout: logo left, copyright right */}
                 <div className="hidden md:flex md:items-center md:justify-between">
                     <div className="flex items-center space-x-3">
-                        <CloudflareAudioLogo />
+                        <CloudflareAudioLogo size={100} />
                     </div>
                     <p className="text-foreground/60 text-sm">
                         The Blog Cloudflare Listen is a hobby project created by @dasfacc

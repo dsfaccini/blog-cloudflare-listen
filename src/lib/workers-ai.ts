@@ -1,5 +1,7 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
+const MAX_CHUNK_SIZE = 1250; // Reduced limit for better reliability
+
 /**
  * Generates audio from text using Cloudflare Workers AI Deepgram Aura-1 model
  * @param text - The text to convert to speech
@@ -12,43 +14,28 @@ export async function generateAudio(text: string): Promise<ArrayBuffer> {
         throw new Error('AI binding not configured');
     }
 
-    try {
-        // Try generating audio without chunking first
-        // The Aura-1 model documentation doesn't specify a character limit
-        console.log(`Generating audio for ${text.length} characters...`);
+    // Check text length and use chunking proactively for long texts
+    if (text.length > MAX_CHUNK_SIZE) {
+        console.log(`Text is ${text.length} characters, using chunking strategy...`);
+        return generateAudioWithChunking(text);
+    }
 
-        const response = await env.AI.run(
-            // @ts-expect-error the model was already released but the sdk hasn't been updated
-            '@cf/deepgram/aura-1',
-            { text: text },
-            {
-                gateway: {
-                    id: 'audio-blog-gateway',
-                },
+    const response = await env.AI.run(
+        // @ts-expect-error the model was already released but the sdk hasn't been updated
+        '@cf/deepgram/aura-1',
+        { text: text },
+        {
+            gateway: {
+                id: 'audio-blog-gateway',
             },
-        );
+        },
+    );
 
-        if (response instanceof ArrayBuffer) {
-            console.log(`Audio generated successfully, size: ${response.byteLength} bytes`);
-            return response;
-        } else {
-            throw new Error('Unexpected response from AI model');
-        }
-    } catch (error) {
-        console.error('Error generating audio:', error);
-
-        // If the error suggests the text is too long, fall back to chunking
-        if (
-            error instanceof Error &&
-            (error.message.includes('too long') || error.message.includes('limit'))
-        ) {
-            console.log('Text too long, falling back to chunking...');
-            return generateAudioWithChunking(text);
-        }
-
-        throw new Error(
-            `Failed to generate audio: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        );
+    if (response instanceof ArrayBuffer) {
+        console.log(`Audio generated successfully, size: ${response.byteLength} bytes`);
+        return response;
+    } else {
+        throw new Error('Unexpected response from AI model');
     }
 }
 
@@ -66,7 +53,6 @@ async function generateAudioWithChunking(text: string): Promise<ArrayBuffer> {
 
     console.log('Using chunking strategy for audio generation...');
 
-    const maxChunkSize = 3000; // Conservative limit for chunking
     const chunks: string[] = [];
 
     // Split by sentences to avoid cutting words
@@ -74,7 +60,7 @@ async function generateAudioWithChunking(text: string): Promise<ArrayBuffer> {
     let currentChunk = '';
 
     for (const sentence of sentences) {
-        if ((currentChunk + sentence).length <= maxChunkSize) {
+        if ((currentChunk + sentence).length <= MAX_CHUNK_SIZE) {
             currentChunk += sentence;
         } else {
             if (currentChunk) chunks.push(currentChunk.trim());
@@ -85,15 +71,26 @@ async function generateAudioWithChunking(text: string): Promise<ArrayBuffer> {
 
     console.log(`Split into ${chunks.length} chunks for generation`);
 
-    // Generate audio for each chunk
+    // Generate audio for all chunks in parallel
+    const audioPromises = chunks.map((chunk) =>
+        env.AI.run(
+            // @ts-expect-error the model was already released but the sdk hasn't been updated
+            '@cf/deepgram/aura-1',
+            { text: chunk },
+            {
+                gateway: {
+                    id: 'audio-blog-gateway',
+                },
+            },
+        ),
+    );
+
+    console.log(`Generating ${chunks.length} audio chunks in parallel...`);
+    const audioResponses = await Promise.all(audioPromises);
+
+    // Validate all responses are ArrayBuffers
     const audioChunks: ArrayBuffer[] = [];
-
-    for (const chunk of chunks) {
-        // @ts-expect-error the model was already released but the sdk hasn't been updated
-        const response = await env.AI.run('@cf/deepgram/aura-1', {
-            text: chunk,
-        });
-
+    for (const response of audioResponses) {
         if (response instanceof ArrayBuffer) {
             audioChunks.push(response);
         } else {
@@ -166,23 +163,24 @@ export async function generateSummary(text: string, maxLength = 100): Promise<st
  * @returns Array of summaries for each paragraph
  */
 export async function generateParagraphSummaries(paragraphs: string[]): Promise<string[]> {
-    const summaries: string[] = [];
+    console.log(`Generating summaries for ${paragraphs.length} paragraphs in parallel...`);
 
-    for (const paragraph of paragraphs) {
+    // Generate all summaries in parallel
+    const summaryPromises = paragraphs.map((paragraph) => {
         // Skip very short paragraphs
         if (paragraph.length < 50) {
-            summaries.push(paragraph);
-            continue;
+            return Promise.resolve(paragraph);
         }
 
-        try {
-            const summary = await generateSummary(paragraph, 30); // Short summary per paragraph
-            summaries.push(summary);
-        } catch (error) {
+        // Generate summary with error handling
+        return generateSummary(paragraph, 30).catch((error) => {
             console.error('Error summarizing paragraph:', error);
-            summaries.push(paragraph.substring(0, 100) + '...'); // Fallback to truncation
-        }
-    }
+            return paragraph.substring(0, 100) + '...'; // Fallback to truncation
+        });
+    });
+
+    const summaries = await Promise.all(summaryPromises);
+    console.log(`Generated ${summaries.length} summaries in parallel`);
 
     return summaries;
 }

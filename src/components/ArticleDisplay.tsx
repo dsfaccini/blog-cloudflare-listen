@@ -2,7 +2,7 @@
 
 import { BookOpen, ExternalLink } from 'lucide-react';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import Link from 'next/link';
 
@@ -27,32 +27,41 @@ export default function ArticleDisplay({
     initialSummary,
 }: ArticleDisplayProps) {
     const [summaries, setSummaries] = useState<string[] | null>(initialSummary);
-    const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+    const [isSummaryLoading, setIsSummaryLoading] = useState(!initialSummary);
+    const [summaryError, setSummaryError] = useState<string | null>(null);
     const [showSummary, setShowSummary] = useState(false);
-
-    const fetchSummaries = async () => {
-        if (summaries || isSummaryLoading) return; // Already have summaries or loading
-
-        setIsSummaryLoading(true);
-        try {
-            const response = await fetch(`/api/summary/${slug}`);
-            if (response.ok) {
-                const data = await response.json() as { summaries: string[]; cached?: boolean };
-                setSummaries(data.summaries);
-            } else {
-                console.error('Failed to fetch summaries');
-            }
-        } catch (error) {
-            console.error('Error fetching summaries:', error);
-        } finally {
-            setIsSummaryLoading(false);
-        }
-    };
 
     const handleShowSummary = () => {
         setShowSummary(true);
-        fetchSummaries(); // Fetch summaries when drawer opens
     };
+
+    // Preload summaries on component mount
+    useEffect(() => {
+        if (summaries) return; // Already have summaries
+
+        const fetchSummaries = async () => {
+            try {
+                setIsSummaryLoading(true);
+                setSummaryError(null);
+                
+                const response = await fetch(`/api/summary/${slug}`);
+                if (response.ok) {
+                    const data = await response.json() as { summaries: string[]; cached?: boolean };
+                    setSummaries(data.summaries);
+                } else {
+                    const errorData = await response.json() as { error?: string };
+                    setSummaryError(errorData.error || `Failed to load summaries (${response.status})`);
+                }
+            } catch (error) {
+                console.error('Error fetching summaries:', error);
+                setSummaryError('Failed to load summaries');
+            } finally {
+                setIsSummaryLoading(false);
+            }
+        };
+
+        fetchSummaries();
+    }, [slug, summaries]);
 
     const originalUrl = `https://blog.cloudflare.com/${slug}/`;
 
@@ -170,15 +179,22 @@ export default function ArticleDisplay({
                             />
                         </div>
 
-                        <Button
-                            onClick={handleShowSummary}
-                            disabled={isSummaryLoading}
-                            variant="outline"
-                            className="sm:w-auto"
-                        >
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            {isSummaryLoading ? 'Generating Summary...' : 'Read Summary'}
-                        </Button>
+                        <div className="flex flex-col gap-2">
+                            <Button
+                                onClick={handleShowSummary}
+                                disabled={isSummaryLoading || summaryError !== null}
+                                variant="outline"
+                                className="sm:w-auto"
+                            >
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                {isSummaryLoading ? 'Generating Summary...' : 'Read Summary'}
+                            </Button>
+                            {summaryError && (
+                                <p className="text-xs text-red-500">
+                                    {summaryError}
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </Card>
 
