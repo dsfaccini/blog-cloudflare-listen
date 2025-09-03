@@ -1,0 +1,11 @@
+.next
+dist
+out
+build
+node_modules
+package-lock.json
+*.lock
+coverage
+public
+cloudflare-env.d.ts
+

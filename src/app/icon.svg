@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-label="Cloudflare-style audio favicon">
+  <defs>
+    <linearGradient id="cfGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F38020"/>
+      <stop offset="100%" stop-color="#FDBA2C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- headband -->
+  <path d="M12 30a20 20 0 0 1 40 0" fill="none" stroke="url(#cfGrad)" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- ear cups -->
+  <rect x="7" y="30" width="12" height="22" rx="5" ry="5" fill="url(#cfGrad)"/>
+  <rect x="45" y="30" width="12" height="22" rx="5" ry="5" fill="url(#cfGrad)"/>
+
+  <!-- center mark -->
+  <circle cx="32" cy="40" r="2.5" fill="#FDBA2C"/>
+
+  <!-- sound waves -->
+  <path d="M26 38c3-4 9-4 12 0" fill="none" stroke="url(#cfGrad)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M22 34c5-7 15-7 20 0" fill="none" stroke="url(#cfGrad)" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,181 @@
+<article class="post-full mw-100 ph3 ph0-l fs-20px">
+    <h1 class="f6 f7-l fw4 gray1 pt1 pt3-l mb1">Cloudy Summarizations of Email Detections: Beta Announcement</h1>
+    <p class="f3 fw5 gray5 db di-l mt2">2025-08-29</p>
+    <ul class="author-lists flex pl0 mt4">
+        <li class="list flex items-center pr2 mb1-ns">
+            <a href="/author/ayush/" class="static-avatar pr1">
+                <img class="author-profile-image br-100 mr2" src="https://blog.cloudflare.com/cdn-cgi/image/format=auto,dpr=3,width=64,height=64,gravity=face,fit=crop,zoom=0.5/https://cf-assets.www.cloudflare.com/zkvhlag99gkb/16XufphFwxLrjgrc4HQd5K/31b6f03b182f3fd13f09ad34ad9de18c/ayush.png" alt="Ayush Kumar" width="62" height="62"></a>
+                <div class="author-name-tooltip">
+                    <a href="/author/ayush/" class="fw4 f3 no-underline black mr3">Ayush Kumar</a>
+                </div>
+            </li>
+            <li class="list flex items-center pr2 mb1-ns">
+                <a href="/author/nick-blazier/" class="static-avatar pr1">
+                    <img class="author-profile-image br-100 mr2" src="https://blog.cloudflare.com/cdn-cgi/image/format=auto,dpr=3,width=64,height=64,gravity=face,fit=crop,zoom=0.5/https://cf-assets.www.cloudflare.com/zkvhlag99gkb/6EqysfZ9O4B7fiqUFUpnuO/eb6b0dbd838f46c5275aed437b76e95f/nick-blazier.png" alt="Nick Blazier" width="62" height="62"></a>
+                    <div class="author-name-tooltip">
+                        <a href="/author/nick-blazier/" class="fw4 f3 no-underline black mr3">Nick Blazier</a>
+                    </div>
+                </li>
+                <li class="list flex items-center pr2 mb1-ns">
+                    <a href="/author/philip-syme/" class="static-avatar pr1">
+                        <img class="author-profile-image br-100 mr2" src="https://blog.cloudflare.com/cdn-cgi/image/format=auto,dpr=3,width=64,height=64,gravity=face,fit=crop,zoom=0.5/https://cf-assets.www.cloudflare.com/zkvhlag99gkb/5JjICgSdFOOqYbFFf9baJ5/9fe67bf8efb354f67a7cce11dbb06926/Phil_Syme.jpg" alt="Phil Syme" width="62" height="62"></a>
+                        <div class="author-name-tooltip">
+                            <a href="/author/philip-syme/" class="fw4 f3 no-underline black mr3">Phil Syme</a>
+                        </div>
+                    </li>
+                </ul>
+                <section class="post-full-content">
+                    <div class="mb2 gray5">4 min read</div>
+                    <img class="mr2" src="https://cf-assets.www.cloudflare.com/zkvhlag99gkb/6PwmCGk5XOB3VwlH3TEXHl/88ea6af65e15e4a4fa3ae0e0ef600769/image1.png" alt="">
+                        <div class="post-content lh-copy gray1">
+                            <div class="flex anchor relative">
+                                <h2 id="background">Background</h2>
+                                <a href="#background" aria-hidden="true" class="relative sm:absolute sm:-left-5">
+                                    <svg width="16" height="16" viewBox="0 0 24 24">
+                                        <path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                            <p>Organizations face continuous threats from <a href="https://www.cloudflare.com/learning/access-management/phishing-attack/">
+                                <u>phishing</u>
+                            </a>,                            <a href="https://www.cloudflare.com/learning/email-security/business-email-compromise-bec/">
+                                <u> business email compromise (BEC)</u>
+                            </a>, and other advanced email attacks. Attackers <a href="https://www.cloudflare.com/the-net/multichannel-phishing/">
+                            <u>adapt their tactics</u>
+                        </a> daily, forcing defenders to move just as quickly to keep inboxes safe.</p>
+                    <p>Cloudflare’s visibility across a large portion of the Internet gives us an unparalleled view of malicious campaigns. We process billions of email threat signals every day, feeding them into multiple AI and machine learning models. This lets our detection team create and deploy new rules at high speed, blocking malicious and unwanted emails before they reach the inbox.</p>
+                    <p>But rapid protection introduces a new challenge: making sure security teams understand exactly what we blocked — and why.</p>
+                    <div class="flex anchor relative">
+                        <h2 id="the-challenge">The Challenge</h2>
+                        <a href="#the-challenge" aria-hidden="true" class="relative sm:absolute sm:-left-5">
+                            <svg width="16" height="16" viewBox="0 0 24 24">
+                                <path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path>
+                            </svg>
+                        </a>
+                    </div>
+                    <p>Cloudflare’s fast-moving detection pipeline is one of our greatest strengths — but it also creates a communication gap for customers. Every day, our detection analysts publish new rules to block phishing, BEC, and other unwanted messages. These rules often blend signals from multiple AI and machine learning models, each looking at different aspects of a message like its content, headers, links, attachments, and sender reputation.</p>
+                    <p>While this layered approach catches threats early, SOC teams don’t always have insight into the specific combination of factors that triggered a detection. Instead, they see a rule name in the investigation tab with little explanation of what it means.</p>
+                    <p>Take the rule <i>BEC.SentimentCM_BEC.SpoofedSender</i> as an example. Internally, we know this indicates:</p>
+                    <ul>
+                        <li>
+                            <p>The email contained no unique links or attachments a common BEC pattern</p>
+                        </li>
+                        <li>
+                            <p>It was flagged as highly likely to be BEC by our Churchmouse sentiment analysis models</p>
+                        </li>
+                        <li>
+                            <p>Spoofing indicators were found, such as anomalies in the envelope_from header</p>
+                        </li>
+                    </ul>
+                    <p>Those details are second nature to our detection team, but without that context, SOC analysts are left to reverse-engineer the logic from opaque labels. They don’t see the nuanced ML outputs (like Churchmouse’s sentiment scoring) or the subtle header anomalies, or the sender IP/domain reputation data that factored into the decision.</p>
+                    <p>The result is time lost to unclear investigations or the risk of mistakenly releasing malicious emails. For teams operating under pressure, that’s more than just an inconvenience, it's a security liability.</p>
+                    <p>That’s why we extended Cloudy (our AI-powered agent) to translate complex detection logic into clear explanations, giving SOC teams the context they need without slowing them down.</p>
+                    <div class="flex anchor relative">
+                        <h2 id="enter-cloudy-summaries">Enter Cloudy Summaries</h2>
+                        <a href="#enter-cloudy-summaries" aria-hidden="true" class="relative sm:absolute sm:-left-5">
+                            <svg width="16" height="16" viewBox="0 0 24 24">
+                                <path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path>
+                            </svg>
+                        </a>
+                    </div>
+                    <p>Several weeks ago, we launched Cloudy within our Cloudflare One product suite to help customers understand gateway policies and their impacts (you can read more about the launch here: https://blog.cloudflare.com/introducing-ai-agent/).</p>
+                    <p>We began testing Cloudy's ability to explain the detections and updates we continuously deploy. Our first attempt revealed significant challenges.</p>
+                    <figure class="kg-card kg-image-card">
+                        <img src="https://cf-assets.www.cloudflare.com/zkvhlag99gkb/63bsCRl2hKUyECh1vJND5k/a033fce3c95a635ede07e1fd03a9edf5/image3.png" alt="" class="kg-image" width="1201" height="268" loading="lazy">
+                        </figure>
+                        <div class="flex anchor relative">
+                            <h3 id="the-hallucination-problem">The Hallucination Problem</h3>
+                            <a href="#the-hallucination-problem" aria-hidden="true" class="relative sm:absolute sm:-left-5">
+                                <svg width="16" height="16" viewBox="0 0 24 24">
+                                    <path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path>
+                                </svg>
+                            </a>
+                        </div>
+                        <p>We observed frequent LLM <a href="https://www.cloudflare.com/learning/ai/what-are-ai-hallucinations/">
+                            <u>hallucinations</u>
+                        </a>, the model generating inaccurate information about messages. While this might be acceptable when analyzing logs, it's dangerous for email security detections. A hallucination claiming a malicious message is clean could lead SOC analysts to release it from quarantine, potentially causing a security breach.</p>
+                    <p>These hallucinations occurred because email detections involve numerous and complex inputs. Our scanning process runs messages through multiple ML algorithms examining different components: body content, attachments, links, IP reputation, and more. The same complexity that makes manual detection explanation difficult also caused our initial LLM implementation to produce inconsistent and sometimes inaccurate outputs.</p>
+                    <div class="flex anchor relative">
+                        <h3 id="building-guardrails">Building Guardrails</h3>
+                        <a href="#building-guardrails" aria-hidden="true" class="relative sm:absolute sm:-left-5">
+                            <svg width="16" height="16" viewBox="0 0 24 24">
+                                <path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path>
+                            </svg>
+                        </a>
+                    </div>
+                    <p>To minimize hallucination risk while maintaining inbox security, we implemented several manual safeguards:</p>
+                    <p>
+                        <b>Step 1: RAG Implementation</b>
+                    </p>
+                    <p>We ensured Cloudy only accessed information from our detection dataset corpus, creating a <a href="https://www.cloudflare.com/learning/ai/retrieval-augmented-generation-rag/">
+                        <u>Retrieval-Augmented Generation (RAG)</u>
+                    </a> system. This significantly reduced hallucinations by grounding the LLM's assessments in actual detection data.</p>
+                <p>
+                    <b>Step 2: Model Context Enhancement</b>
+                </p>
+                <p>We added crucial context about our internal models. For example, the "Churchmouse" designation refers to a group of sentiment detection models, not a single algorithm. Without this context, Cloudy attempted to define "churchmouse" using the common idiom "poor as a church mouse" referencing starving church mice because holy bread never falls to the floor. While historically interesting, this was completely irrelevant to our security context.</p>
+                <div class="flex anchor relative">
+                    <h3 id="current-results">Current Results</h3>
+                    <a href="#current-results" aria-hidden="true" class="relative sm:absolute sm:-left-5">
+                        <svg width="16" height="16" viewBox="0 0 24 24">
+                            <path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path>
+                        </svg>
+                    </a>
+                </div>
+                <p>Our testing shows Cloudy now produces more stable explanations with minimal hallucinations. For example, the detection <i>SPAM.ASNReputation.IPReputation_Scuttle.Anomalous_HC</i> now generates this summary:</p>
+                <p>"This rule flags email messages as spam if they come from a sender with poor Internet reputation, have been identified as suspicious by a blocklist, and have unusual email server setup, indicating potential malicious activity."</p>
+                <p>This strikes the right balance. Customers can quickly understand what the detection found and why we classified the message accordingly.</p>
+                <div class="flex anchor relative">
+                    <h2 id="beta-program">Beta Program</h2>
+                    <a href="#beta-program" aria-hidden="true" class="relative sm:absolute sm:-left-5">
+                        <svg width="16" height="16" viewBox="0 0 24 24">
+                            <path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path>
+                        </svg>
+                    </a>
+                </div>
+                <p>We're opening Cloudy email detection summaries to a select group of beta users. Our primary goal is ensuring our guardrails prevent hallucinations that could lead to security compromises. During this beta phase, we'll rigorously test outputs and verify their quality before expanding access to all customers.</p>
+                <div class="flex anchor relative">
+                    <h2 id="ready-to-enhance-your-email-security">Ready to enhance your email security?</h2>
+                    <a href="#ready-to-enhance-your-email-security" aria-hidden="true" class="relative sm:absolute sm:-left-5">
+                        <svg width="16" height="16" viewBox="0 0 24 24">
+                            <path fill="currentcolor" d="m12.11 15.39-3.88 3.88a2.52 2.52 0 0 1-3.5 0 2.47 2.47 0 0 1 0-3.5l3.88-3.88a1 1 0 0 0-1.42-1.42l-3.88 3.89a4.48 4.48 0 0 0 6.33 6.33l3.89-3.88a1 1 0 1 0-1.42-1.42Zm8.58-12.08a4.49 4.49 0 0 0-6.33 0l-3.89 3.88a1 1 0 0 0 1.42 1.42l3.88-3.88a2.52 2.52 0 0 1 3.5 0 2.47 2.47 0 0 1 0 3.5l-3.88 3.88a1 1 0 1 0 1.42 1.42l3.88-3.89a4.49 4.49 0 0 0 0-6.33ZM8.83 15.17a1 1 0 0 0 1.1.22 1 1 0 0 0 .32-.22l4.92-4.92a1 1 0 0 0-1.42-1.42l-4.92 4.92a1 1 0 0 0 0 1.42Z"></path>
+                        </svg>
+                    </a>
+                </div>
+                <p>We provide all organizations (whether a Cloudflare customer or not) with free access to our Retro Scan tool, allowing them to use our predictive AI models to scan existing inbox messages. Retro Scan will detect and highlight any threats found, enabling organizations to remediate them directly in their email accounts. With these insights, organizations can implement further controls, either using <a href="https://www.cloudflare.com/zero-trust/products/email-security/">
+                    <u>Cloudflare Email Security</u>
+                </a> or their preferred solution, to prevent similar threats from reaching their inboxes in the future.</p>
+            <p>If you are interested in how Cloudflare can help secure your inboxes, sign up for a phishing risk assessment <a href="https://www.cloudflare.com/lp/email-security-self-guided-demo-request/?utm_medium=referral&amp;utm_source=blog&amp;utm_campaign=2025-q3-acq-gbl-modernsec-es-ge-general-ai_week_blog">
+                <u>here</u>
+            </a>.&nbsp;</p>
+        <figure class="kg-card kg-image-card">
+            <img src="https://cf-assets.www.cloudflare.com/zkvhlag99gkb/lV6mxQTYwaS6j0n0e8arE/fd62cf8032b15780690f4ed48578d3fc/image2.png" alt="" class="kg-image" width="1201" height="307" loading="lazy">
+            </figure>
+            <p></p>
+        </div>
+    </section>
+    <section class="post-full-content flex flex-row flex-wrap mw7 center mb4">
+        <div class="post-content lh-copy w-100 gray1 bt b--gray8 pt4">Cloudflare's connectivity cloud protects <a target="_blank" href="https://www.cloudflare.com/network-services/" rel="noreferrer">entire corporate networks</a>, helps customers build <a target="_blank" href="https://workers.cloudflare.com/" rel="noreferrer">Internet-scale applications efficiently</a>, accelerates any <a target="_blank" href="https://www.cloudflare.com/performance/accelerate-internet-applications/" rel="noreferrer">website or Internet application</a>,            <a target="_blank" href="https://www.cloudflare.com/ddos/" rel="noreferrer">wards off DDoS attacks</a>, keeps <a target="_blank" href="https://www.cloudflare.com/application-security/" rel="noreferrer">hackers at bay</a>, and can help you on <a target="_blank" href="https://www.cloudflare.com/products/zero-trust/" rel="noreferrer">your journey to Zero Trust</a>.            <br>
+                <br>Visit <a target="_blank" href="https://one.one.one.one/" rel="noreferrer">1.1.1.1</a> from any device to get started with our free app that makes your Internet faster and safer.<br>
+                    <br>To learn more about our mission to help build a better Internet, <a target="_blank" href="https://www.cloudflare.com/learning/what-is-cloudflare/" rel="noreferrer">start here</a>. If you're looking for a new career direction, check out <a target="_blank" href="http://www.cloudflare.com/careers" rel="noreferrer">our open positions</a>.
+                    </div>
+                </section>
+                <div class="pv2 ph0-l mw7 center" id="social-buttons">
+                    <div class="mt5-l mt2 mb4 f2 flex flex-row-ns flex-column flex-wrap">
+                        <a id="social-button-hn" title="Discuss on Hacker News" href="https://news.ycombinator.com/submitlink?u=https://blog.cloudflare.com/cloudy-driven-email-security-summaries" target="_blank" rel="noreferrer" class="mr2-ns mb0-l white link b pv3 ph3 mb3 " style="background-color: rgb(0, 85, 220);">
+                            <svg version="1.1" id="Layer_1"
+                                xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 512 512" class="mr2">
+                                <g>
+                                    <path d="M31,31v450h450V31H31z M270.1,287.6v94.9h-28.1v-94.9L165,143.5h31.9L256,254.3l59.1-110.8H347
+C347,143.5,270.1,287.6,270.1,287.6z"></path>
+                                </g>
+                            </svg>
+                            <span class="v-mid">Discuss on Hacker News</span>
+                        </a>
+                    </div>
+                </div>
+                <iframe sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" title="cloudflare-tv-live-link" id="cloudflare-tv-embed" src="https://cloudflare.tv/embed/live.html" loading="lazy"></iframe>
+                <a href="/tag/ai-week/" class="dib pl2 pr2 pt1 pb1 mb2 bg-gray8 no-underline blue3 f2 mr1">AI Week</a>
+                <a href="/tag/cloud-email-security/" class="dib pl2 pr2 pt1 pb1 mb2 bg-gray8 no-underline blue3 f2 mr1">Cloud Email Security</a>
+                <a href="/tag/llm/" class="dib pl2 pr2 pt1 pb1 mb2 bg-gray8 no-underline blue3 f2 mr1">LLM</a>
+            </article>
