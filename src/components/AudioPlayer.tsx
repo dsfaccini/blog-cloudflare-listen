@@ -2,21 +2,15 @@
 
 import { Loader2, Pause, Play, RefreshCw, Volume2 } from 'lucide-react';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { useAudioData, type AudioData } from '@/hooks/useAudioData';
 
 interface AudioPlayerProps {
     slug: string;
     title: string;
-}
-
-interface AudioChunkInfo {
-    isComplete: boolean;
-    totalChunks: number;
-    availableChunks: number;
-    missingChunks: string[];
 }
 
 export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
@@ -24,14 +18,15 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
-    const [isLoadingAudio, setIsLoadingAudio] = useState(true);
-    const [audioError, setAudioError] = useState<string | null>(null);
     const [audioReady, setAudioReady] = useState(false);
-    const [chunkInfo, setChunkInfo] = useState<AudioChunkInfo | null>(null);
-    const [isRetrying, setIsRetrying] = useState(false);
-    const [retryCount, setRetryCount] = useState(0);
     const audioRef = useRef<HTMLAudioElement>(null);
-    const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const currentAudioUrl = useRef<string | null>(null);
+
+    // Use React Query for audio data fetching
+    const { data: audioData, error: audioError, isLoading: isLoadingAudio, refetch } = useAudioData(slug);
+    
+    // Type assertion to help TypeScript
+    const typedAudioData = audioData as AudioData | undefined;
 
     const formatTime = (time: number) => {
         const minutes = Math.floor(time / 60);
@@ -49,7 +44,6 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
                 await audioRef.current.play();
             } catch (error) {
                 console.error('Error playing audio:', error);
-                setAudioError('Failed to play audio');
             }
         }
     };
@@ -61,9 +55,8 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
     };
 
     const handleError = () => {
-        setIsLoadingAudio(false);
         setAudioReady(false);
-        setAudioError('Failed to load audio');
+        console.error('Audio element error');
     };
 
     const handlePlay = () => setIsPlaying(true);
@@ -84,130 +77,48 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
         }
     };
 
+    // Set volume on audio element
     useEffect(() => {
         if (audioRef.current) {
             audioRef.current.volume = volume;
         }
     }, [volume]);
 
-    // Load audio with progressive loading support
-    const loadAudio = useCallback(
-        async (isRetry = false) => {
-            if (!audioRef.current) return;
-
-            try {
-                if (!isRetry) {
-                    setIsLoadingAudio(true);
-                    setAudioError(null);
-                    setChunkInfo(null);
-                } else {
-                    setIsRetrying(true);
-                }
-
-                // Fetch audio with headers to get chunk information
-                const response = await fetch(`/api/audio/${slug}`);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                // Extract chunk information from headers
-                const audioStatus = response.headers.get('X-Audio-Status');
-                const totalChunks = parseInt(response.headers.get('X-Total-Chunks') || '0');
-                const availableChunks = parseInt(response.headers.get('X-Available-Chunks') || '0');
-                const missingChunksHeader = response.headers.get('X-Missing-Chunks');
-                const missingChunks =
-                    missingChunksHeader && missingChunksHeader !== 'none'
-                        ? missingChunksHeader.split(',')
-                        : [];
-
-                const newChunkInfo: AudioChunkInfo = {
-                    isComplete: audioStatus === 'complete',
-                    totalChunks,
-                    availableChunks,
-                    missingChunks,
-                };
-
-                setChunkInfo(newChunkInfo);
-
-                // Create blob URL for the audio
-                const audioBlob = await response.blob();
-                const audioUrl = URL.createObjectURL(audioBlob);
-
-                // Set the audio source
-                audioRef.current.src = audioUrl;
-                audioRef.current.load();
-
-                console.log(
-                    `Audio loaded: ${availableChunks}/${totalChunks} chunks, status: ${audioStatus}`,
-                );
-
-                // If audio is partial, schedule retry for missing chunks
-                if (!newChunkInfo.isComplete && missingChunks.length > 0) {
-                    // Schedule retry inline to avoid dependency issues
-                    if (retryTimeoutRef.current) {
-                        clearTimeout(retryTimeoutRef.current);
-                    }
-
-                    const delays = [30000, 60000, 120000, 300000]; // 30s, 1min, 2min, 5min
-                    const delay = retryCount < delays.length ? delays[retryCount] : 300000;
-
-                    console.log(`Scheduling retry ${retryCount + 1} in ${delay}ms`);
-
-                    retryTimeoutRef.current = setTimeout(() => {
-                        setRetryCount((prev) => prev + 1);
-                        loadAudio(true);
-                    }, delay);
-                }
-            } catch (error) {
-                console.error('Error loading audio:', error);
-                setAudioError(
-                    `Failed to load audio: ${error instanceof Error ? error.message : 'Unknown error'}`,
-                );
-                setIsLoadingAudio(false);
-                setAudioReady(false);
-            } finally {
-                setIsRetrying(false);
-            }
-        },
-        [slug, retryCount],
-    );
-
-    // Manual retry function
-    const manualRetry = useCallback(() => {
-        if (retryTimeoutRef.current) {
-            clearTimeout(retryTimeoutRef.current);
-        }
-        setRetryCount(0);
-        loadAudio(true);
-    }, [loadAudio]);
-
-    // Load audio on component mount
+    // Update audio source when React Query data changes
     useEffect(() => {
-        loadAudio();
+        if (typedAudioData && typedAudioData.audioUrl && audioRef.current) {
+            // Clean up previous URL to prevent memory leaks
+            if (currentAudioUrl.current) {
+                URL.revokeObjectURL(currentAudioUrl.current);
+            }
+            
+            // Set new audio source
+            audioRef.current.src = typedAudioData.audioUrl;
+            currentAudioUrl.current = typedAudioData.audioUrl;
+            audioRef.current.load();
+        }
+    }, [typedAudioData]);
 
+    // Cleanup blob URL on unmount
+    useEffect(() => {
         return () => {
-            if (retryTimeoutRef.current) {
-                clearTimeout(retryTimeoutRef.current);
+            if (currentAudioUrl.current) {
+                URL.revokeObjectURL(currentAudioUrl.current);
             }
         };
-    }, [loadAudio]);
+    }, []);
+
+    // Manual retry function using React Query's refetch
+    const manualRetry = () => {
+        refetch();
+    };
 
     // Update audio ready state when metadata loads
     useEffect(() => {
         const handleLoadedMetadata = () => {
             if (audioRef.current) {
                 setDuration(audioRef.current.duration);
-                setIsLoadingAudio(false);
                 setAudioReady(true);
-
-                // Reset retry count on successful load
-                if (chunkInfo?.isComplete) {
-                    setRetryCount(0);
-                    if (retryTimeoutRef.current) {
-                        clearTimeout(retryTimeoutRef.current);
-                    }
-                }
             }
         };
 
@@ -218,16 +129,14 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
                 audioElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
             };
         }
-    }, [chunkInfo]);
+    }, [typedAudioData]);
 
-    const showLoader = isLoadingAudio && !chunkInfo;
-    const showPartialLoader = isRetrying && chunkInfo && !chunkInfo.isComplete;
+    const showLoader = isLoadingAudio && !typedAudioData;
+    const chunkInfo = typedAudioData?.chunkInfo;
 
     const getStatusMessage = () => {
-        if (audioError) return 'Audio unavailable';
+        if (audioError) return `Audio unavailable: ${audioError.message}`;
         if (showLoader) return 'Generating audio...';
-        if (showPartialLoader)
-            return `Loading missing parts... (${chunkInfo?.availableChunks}/${chunkInfo?.totalChunks})`;
         if (chunkInfo && !chunkInfo.isComplete) {
             return `Partial audio ready (${chunkInfo.availableChunks}/${chunkInfo.totalChunks} parts) - missing parts loading in background`;
         }
@@ -240,7 +149,7 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
             <div className="flex items-center space-x-4">
                 <Button
                     onClick={togglePlayPause}
-                    disabled={showLoader || audioError !== null}
+                    disabled={showLoader || audioError !== null || !audioReady}
                     size="lg"
                     className="h-12 w-12 rounded-full"
                 >
@@ -256,13 +165,13 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
                 {chunkInfo && !chunkInfo.isComplete && !showLoader && (
                     <Button
                         onClick={manualRetry}
-                        disabled={isRetrying}
+                        disabled={isLoadingAudio}
                         size="sm"
                         variant="outline"
                         className="h-8 w-8 rounded-full p-0"
                         title="Retry loading missing parts"
                     >
-                        {isRetrying ? (
+                        {isLoadingAudio ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                             <RefreshCw className="h-4 w-4" />
@@ -290,7 +199,7 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
                             </span>
                         </div>
                     )}
-                    {audioError && <p className="mt-1 text-xs text-red-500">{audioError}</p>}
+                    {audioError && <p className="mt-1 text-xs text-red-500">{audioError.message}</p>}
                 </div>
 
                 <div className="flex min-w-0 items-center space-x-2">

@@ -2,7 +2,7 @@
 
 import { BookOpen, ExternalLink } from 'lucide-react';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import Link from 'next/link';
 
@@ -13,6 +13,7 @@ import SummaryDrawer from '@/components/SummaryDrawer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useSummaryData } from '@/hooks/useSummaryData';
 import type { ArticleContent as ArticleContentType } from '@/lib/article-parser';
 
 interface ArticleDisplayProps {
@@ -26,42 +27,17 @@ export default function ArticleDisplay({
     slug,
     initialSummary,
 }: ArticleDisplayProps) {
-    const [summaries, setSummaries] = useState<string[] | null>(initialSummary);
-    const [isSummaryLoading, setIsSummaryLoading] = useState(!initialSummary);
-    const [summaryError, setSummaryError] = useState<string | null>(null);
     const [showSummary, setShowSummary] = useState(false);
+    
+    // Use React Query for summary data fetching
+    const { data: summaryData, isLoading: isSummaryLoading, error: summaryError } = useSummaryData(slug);
+    
+    // Use React Query data or fallback to initial summary
+    const summaries = summaryData?.summaries || initialSummary;
 
     const handleShowSummary = () => {
         setShowSummary(true);
     };
-
-    // Preload summaries on component mount
-    useEffect(() => {
-        if (summaries) return; // Already have summaries
-
-        const fetchSummaries = async () => {
-            try {
-                setIsSummaryLoading(true);
-                setSummaryError(null);
-                
-                const response = await fetch(`/api/summary/${slug}`);
-                if (response.ok) {
-                    const data = await response.json() as { summaries: string[]; cached?: boolean };
-                    setSummaries(data.summaries);
-                } else {
-                    const errorData = await response.json() as { error?: string };
-                    setSummaryError(errorData.error || `Failed to load summaries (${response.status})`);
-                }
-            } catch (error) {
-                console.error('Error fetching summaries:', error);
-                setSummaryError('Failed to load summaries');
-            } finally {
-                setIsSummaryLoading(false);
-            }
-        };
-
-        fetchSummaries();
-    }, [slug, summaries]);
 
     const originalUrl = `https://blog.cloudflare.com/${slug}/`;
 
@@ -191,7 +167,7 @@ export default function ArticleDisplay({
                             </Button>
                             {summaryError && (
                                 <p className="text-xs text-red-500">
-                                    {summaryError}
+                                    {summaryError.message}
                                 </p>
                             )}
                         </div>
