@@ -18,6 +18,8 @@
     },
     "dependencies": {
         "@opennextjs/cloudflare": "^1.6.5",
+        "@pydantic/logfire-api": "^0.8.1",
+        "@pydantic/logfire-cf-workers": "^0.7.0",
         "@radix-ui/react-accordion": "^1.2.12",
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -78,6 +80,6 @@
         "tailwindcss": "^4.1.12",
         "tailwindcss-animate": "^1.0.7",
         "typescript": "^5.9.2",
-        "wrangler": "^4.33.0"
+        "wrangler": "^4.33.2"
     }
 }
