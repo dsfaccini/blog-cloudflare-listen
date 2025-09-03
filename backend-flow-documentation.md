@@ -163,6 +163,7 @@ When a user visits `/{slug}`:
 
 ### Audio API (`/api/audio/{slug}`)
 - **Method:** GET
+- **Anti-abuse Check:** Returns 404 if `blogs/{slug}/article.json` doesn't exist
 - **Multi-tier Caching:** Checks complete audio → chunked audio → generates missing
 - **Progressive Responses:** Returns 206 (Partial Content) for incomplete audio
 - **Automatic Retry:** Always regenerates missing chunks without client parameters
@@ -176,6 +177,7 @@ When a user visits `/{slug}`:
 
 ### Summary API (`/api/summary/{slug}`)
 - **Method:** GET
+- **Anti-abuse Check:** Returns 404 if `blogs/{slug}/article.json` doesn't exist
 - **Cache-First Strategy:** Always checks R2 before generating
 - **Storage:** Saves generated summaries as `blogs/{slug}/summary.json`
 - **Response Format:**
@@ -268,50 +270,50 @@ interface AudioChunkMetadata {
 
 ```mermaid
 graph TB
-    Start([User visits /{slug}]) --> CheckCache{Check R2 Cache<br/>article.json exists?}
-    
-    CheckCache -->|Yes| LoadCached[Load article from<br/>blogs/{slug}/article.json]
-    CheckCache -->|No| FetchOriginal[Fetch from<br/>blog.cloudflare.com/{slug}/]
-    
-    FetchOriginal --> StoreRaw[Store raw HTML<br/>blogs/{slug}/raw.html]
+    Start([User visits /slug]) --> CheckCache{Check R2 Cache<br/>article.json exists?}
+
+    CheckCache -->|Yes| LoadCached[Load article from<br/>blogs/slug/article.json]
+    CheckCache -->|No| FetchOriginal[Fetch from<br/>blog.cloudflare.com/slug/]
+
+    FetchOriginal --> StoreRaw[Store raw HTML<br/>blogs/slug/raw.html]
     StoreRaw --> ParseArticle[Parse HTML to<br/>structured data]
-    ParseArticle --> StoreArticle[Store article<br/>blogs/{slug}/article.json]
-    
+    ParseArticle --> StoreArticle[Store article<br/>blogs/slug/article.json]
+
     StoreArticle --> LoadCached
     LoadCached --> RenderPage[Render ArticleDisplay<br/>component]
-    
-    RenderPage --> AudioRequest[AudioPlayer requests<br/>/api/audio/{slug}]
-    RenderPage --> SummaryRequest[Component requests<br/>/api/summary/{slug}]
-    
+
+    RenderPage --> AudioRequest[AudioPlayer requests<br/>/api/audio/slug]
+    RenderPage --> SummaryRequest[Component requests<br/>/api/summary/slug]
+
     AudioRequest --> CheckAudioCache{Audio cached<br/>in R2?}
     CheckAudioCache -->|Yes| ServeAudio[Serve cached audio<br/>from R2]
     CheckAudioCache -->|No| GenerateAudio[Generate audio using<br/>@cf/deepgram/aura-1]
-    
-    GenerateAudio --> ExtractAudioText[Extract text using<br/>extractTextForAudio()]
+
+    GenerateAudio --> ExtractAudioText[Extract text using<br/>extractTextForAudio]
     ExtractAudioText --> CheckTextLength{Text > 1250<br/>characters?}
     CheckTextLength -->|Yes| ChunkText[Split into chunks<br/>by sentences]
     CheckTextLength -->|No| SingleAudio[Generate single<br/>audio file]
-    
+
     ChunkText --> ParallelAudio[Generate audio for<br/>all chunks in parallel]
     ParallelAudio --> CombineAudio[Combine audio<br/>chunks]
     CombineAudio --> StoreAudio
-    SingleAudio --> StoreAudio[Store audio<br/>blogs/{slug}/audio.mp3]
-    
+    SingleAudio --> StoreAudio[Store audio<br/>blogs/slug/audio.mp3]
+
     StoreAudio --> ServeAudio
-    
+
     SummaryRequest --> CheckSummaryCache{Summary cached<br/>in R2?}
     CheckSummaryCache -->|Yes| ServeSummary[Serve cached summary<br/>from R2]
     CheckSummaryCache -->|No| GenerateSummary[Generate summaries using<br/>@cf/meta/llama-3.2-3b-instruct]
-    
-    GenerateSummary --> ExtractParagraphs[Extract paragraphs using<br/>extractParagraphsForSummary()]
+
+    GenerateSummary --> ExtractParagraphs[Extract paragraphs using<br/>extractParagraphsForSummary]
     ExtractParagraphs --> ParallelSummaries[Generate summaries for<br/>all paragraphs in parallel]
-    ParallelSummaries --> StoreSummary[Store summaries<br/>blogs/{slug}/summary.json]
-    
+    ParallelSummaries --> StoreSummary[Store summaries<br/>blogs/slug/summary.json]
+
     StoreSummary --> ServeSummary
-    
+
     ServeAudio --> AudioReady[Audio ready for playback]
     ServeSummary --> SummaryReady[Summary ready for display]
-    
+
     AudioReady --> End([User can play audio])
     SummaryReady --> End2([User can view summaries])
 
@@ -319,7 +321,7 @@ graph TB
     classDef generation fill:#fff3e0
     classDef cache fill:#f1f8e9
     classDef api fill:#fce4ec
-    
+
     class StoreRaw,StoreArticle,StoreAudio,StoreSummary storage
     class GenerateAudio,GenerateSummary,ChunkText,ParallelAudio,ParallelSummaries generation
     class CheckCache,CheckAudioCache,CheckSummaryCache cache
@@ -344,6 +346,6 @@ graph TB
 
 **Recent Fixes Applied:**
 - ✅ **Chunk Ordering:** Only contiguous chunks from index 0 are combined
-- ✅ **Server Retry:** Always regenerates missing chunks automatically  
+- ✅ **Server Retry:** Always regenerates missing chunks automatically
 - ✅ **Client Timing:** 30+ second delays prevent rate limiting
 - ✅ **Error Handling:** Comprehensive debugging with detailed context
