@@ -465,7 +465,7 @@ export default function TestPage() {
                                 {articleStatus.audioReady && articleStatus.summaryReady && (
                                     <div className="mt-4 border-t pt-4">
                                         <Button asChild className="w-full">
-                                            <Link href={`/${extractSlugFromUrl(url) || ''}`}>
+                                            <Link href={`/blog/${extractSlugFromUrl(url) || ''}`}>
                                                 <ExternalLink className="mr-2 h-4 w-4" />
                                                 View Processed Article
                                             </Link>
