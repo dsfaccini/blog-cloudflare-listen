@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import CloudflareAudioLogo from '@/components/CloudflareAudioLogo';
 import RandomArticles from '@/components/RandomArticles';
+import ArticleSearch from '@/components/ArticleSearch';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -101,6 +102,7 @@ export default function HomePage() {
             </div>
             
             <div className="max-w-6xl mx-auto pb-12">
+                <ArticleSearch />
                 <RandomArticles />
             </div>
         </div>
