@@ -141,13 +141,6 @@ export default function CloudflareAudioLogo({
                         strokeLinecap="round"
                     />
                 </g>
-
-                {/* Subtle "speed line" nod to Cloudflare spark */}
-                <g opacity="0.9">
-                    <rect x="338" y="118" width="130" height="10" rx="5" fill={`url(#${gradId})`} />
-                    <rect x="338" y="138" width="100" height="10" rx="5" fill={`url(#${gradId})`} />
-                    <rect x="338" y="158" width="70" height="10" rx="5" fill={`url(#${gradId})`} />
-                </g>
             </svg>
         </div>
     );
