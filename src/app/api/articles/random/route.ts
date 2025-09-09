@@ -1,4 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+
 import { NextResponse } from 'next/server';
 
 export interface RandomArticle {
@@ -23,7 +24,7 @@ export async function GET() {
 
         // List all articles in the blogs folder
         const listResult = await env.BLOG_STORAGE.list({ prefix: 'blogs/' });
-        
+
         // Extract unique slugs from the keys
         const slugs = new Set<string>();
         for (const object of listResult.objects) {
@@ -34,19 +35,17 @@ export async function GET() {
         }
 
         const allSlugs = Array.from(slugs);
-        
+
         if (allSlugs.length === 0) {
             return NextResponse.json({ articles: [] });
         }
 
         // Randomly select up to 5 articles
-        const selectedSlugs = allSlugs
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 5);
+        const selectedSlugs = allSlugs.sort(() => Math.random() - 0.5).slice(0, 5);
 
         // Fetch article.json for each selected article
         const articles: RandomArticle[] = [];
-        
+
         for (const slug of selectedSlugs) {
             try {
                 const articleObj = await env.BLOG_STORAGE.get(`blogs/${slug}/article.json`);
@@ -57,7 +56,7 @@ export async function GET() {
                         title: articleData.title || 'Untitled',
                         date: articleData.date || 'Unknown date',
                         description: articleData.description,
-                        authors: articleData.authors || []
+                        authors: articleData.authors || [],
                     });
                 }
             } catch (error) {

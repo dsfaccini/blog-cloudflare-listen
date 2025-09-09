@@ -141,7 +141,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
             // Store only the parsed article
             await storeArticleData(slug, article);
-            
+
             // Update the search index with the new article
             try {
                 await updateArticleIndex(env, {
@@ -149,13 +149,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     title: article.title,
                     date: article.date || new Date().toISOString(),
                     description: article.description,
-                    authors: article.authors || []
+                    authors: article.authors || [],
                 });
             } catch (indexError) {
                 console.error('Error updating article index:', indexError);
                 // Don't fail the entire request if index update fails
             }
-            
+
             // Audio and summary are now generated on-demand when requested
         }
 

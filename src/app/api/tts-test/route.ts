@@ -31,7 +31,10 @@ export async function POST(request: NextRequest) {
 
         // Block access in production environment
         if (env.ENVIRONMENT === 'production') {
-            return NextResponse.json({ error: 'TTS testing not available in production' }, { status: 403 });
+            return NextResponse.json(
+                { error: 'TTS testing not available in production' },
+                { status: 403 },
+            );
         }
 
         if (!env.AI) {
@@ -161,7 +164,7 @@ async function generateChunkedAudio(env: CloudflareEnv, text: string): Promise<N
             // Handle ReadableStream (new response format)
             if (response instanceof ReadableStream) {
                 console.log(`📥 Converting ReadableStream to ArrayBuffer for chunk ${i + 1}...`);
-                
+
                 const reader = response.getReader();
                 const streamChunks: Uint8Array[] = [];
                 let totalLength = 0;
@@ -169,7 +172,7 @@ async function generateChunkedAudio(env: CloudflareEnv, text: string): Promise<N
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
-                    
+
                     streamChunks.push(value);
                     totalLength += value.length;
                 }
@@ -182,7 +185,9 @@ async function generateChunkedAudio(env: CloudflareEnv, text: string): Promise<N
                 }
 
                 audioBuffer = combined.buffer;
-                console.log(`✅ TTS Test: Chunk ${i + 1} converted from stream (${audioBuffer.byteLength} bytes)`);
+                console.log(
+                    `✅ TTS Test: Chunk ${i + 1} converted from stream (${audioBuffer.byteLength} bytes)`,
+                );
             }
             // Handle ArrayBuffer (legacy response format)
             else if (response instanceof ArrayBuffer) {

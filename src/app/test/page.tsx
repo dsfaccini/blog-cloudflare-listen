@@ -209,8 +209,12 @@ export default function TestPage() {
                 // Clean up the blob
                 URL.revokeObjectURL(URL.createObjectURL(audioBlob));
             } else {
-                const errorResult = await response.json() as { error?: string };
-                addLog('error', `Audio endpoint failed: ${errorResult.error || 'Unknown error'}`, errorResult);
+                const errorResult = (await response.json()) as { error?: string };
+                addLog(
+                    'error',
+                    `Audio endpoint failed: ${errorResult.error || 'Unknown error'}`,
+                    errorResult,
+                );
             }
         } catch (error) {
             addLog('error', 'Audio test request failed', error);
@@ -238,22 +242,30 @@ export default function TestPage() {
             const response = await fetch(`/api/summary/${slug}`);
 
             if (response.ok) {
-                const data = await response.json() as { summaries: string[]; cached?: boolean };
-                addLog('success', `Summary endpoint successful - ${data.summaries.length} summaries`, {
-                    summaryCount: data.summaries.length,
-                    cached: data.cached,
-                });
-                
+                const data = (await response.json()) as { summaries: string[]; cached?: boolean };
+                addLog(
+                    'success',
+                    `Summary endpoint successful - ${data.summaries.length} summaries`,
+                    {
+                        summaryCount: data.summaries.length,
+                        cached: data.cached,
+                    },
+                );
+
                 // Update article status for display
-                setArticleStatus(prev => ({
+                setArticleStatus((prev) => ({
                     ...prev,
                     audioReady: prev?.audioReady || false,
                     summaryReady: true,
-                    summaries: data.summaries
+                    summaries: data.summaries,
                 }));
             } else {
-                const errorResult = await response.json() as { error?: string };
-                addLog('error', `Summary endpoint failed: ${errorResult.error || 'Unknown error'}`, errorResult);
+                const errorResult = (await response.json()) as { error?: string };
+                addLog(
+                    'error',
+                    `Summary endpoint failed: ${errorResult.error || 'Unknown error'}`,
+                    errorResult,
+                );
             }
         } catch (error) {
             addLog('error', 'Summary test request failed', error);
@@ -402,7 +414,8 @@ export default function TestPage() {
                                 </Button>
 
                                 <p className="text-muted-foreground text-xs">
-                                    Tests audio endpoint - generates MP3 on-demand if needed and stores to R2
+                                    Tests audio endpoint - generates MP3 on-demand if needed and
+                                    stores to R2
                                 </p>
                             </div>
                         </Card>
@@ -420,13 +433,12 @@ export default function TestPage() {
                                     className="w-full"
                                 >
                                     <BookOpen className="mr-2 h-4 w-4" />
-                                    {isGeneratingSummary
-                                        ? 'Testing Summary...'
-                                        : 'Test Summary'}
+                                    {isGeneratingSummary ? 'Testing Summary...' : 'Test Summary'}
                                 </Button>
 
                                 <p className="text-muted-foreground text-xs">
-                                    Tests summary endpoint - generates paragraph summaries on-demand if needed and stores to R2
+                                    Tests summary endpoint - generates paragraph summaries on-demand
+                                    if needed and stores to R2
                                 </p>
                             </div>
                         </Card>

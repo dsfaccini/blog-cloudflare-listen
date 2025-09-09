@@ -15,18 +15,18 @@ export function useSummaryData(slug: string) {
         queryKey: ['summary', slug],
         queryFn: async (): Promise<SummaryData> => {
             const response = await fetch(`/api/summary/${slug}`);
-            
+
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({})) as { error?: string };
+                const errorData = (await response.json().catch(() => ({}))) as { error?: string };
                 throw new Error(errorData.error || `Failed to load summaries (${response.status})`);
             }
-            
-            const data = await response.json() as SummaryData;
-            
+
+            const data = (await response.json()) as SummaryData;
+
             console.log(
                 `Summary loaded via React Query: ${data.summaries.length} summaries, cached: ${data.cached || false}`,
             );
-            
+
             return data;
         },
         retry: 3,

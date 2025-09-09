@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { useAudioData, type AudioData } from '@/hooks/useAudioData';
+import { type AudioData, useAudioData } from '@/hooks/useAudioData';
 
 interface AudioPlayerProps {
     slug: string;
@@ -23,8 +23,13 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
     const currentAudioUrl = useRef<string | null>(null);
 
     // Use React Query for audio data fetching
-    const { data: audioData, error: audioError, isLoading: isLoadingAudio, refetch } = useAudioData(slug);
-    
+    const {
+        data: audioData,
+        error: audioError,
+        isLoading: isLoadingAudio,
+        refetch,
+    } = useAudioData(slug);
+
     // Type assertion to help TypeScript
     const typedAudioData = audioData as AudioData | undefined;
 
@@ -91,7 +96,7 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
             if (currentAudioUrl.current) {
                 URL.revokeObjectURL(currentAudioUrl.current);
             }
-            
+
             // Set new audio source
             audioRef.current.src = typedAudioData.audioUrl;
             currentAudioUrl.current = typedAudioData.audioUrl;
@@ -199,7 +204,9 @@ export default function AudioPlayer({ slug, title }: AudioPlayerProps) {
                             </span>
                         </div>
                     )}
-                    {audioError && <p className="mt-1 text-xs text-red-500">{audioError.message}</p>}
+                    {audioError && (
+                        <p className="mt-1 text-xs text-red-500">{audioError.message}</p>
+                    )}
                 </div>
 
                 <div className="flex min-w-0 items-center space-x-2">

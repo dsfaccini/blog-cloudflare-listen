@@ -1,16 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+
+import { NextRequest, NextResponse } from 'next/server';
+
 import { parseArticle } from '@/lib/article-parser';
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: Promise<{ slug: string[] }> }
+    { params }: { params: Promise<{ slug: string[] }> },
 ) {
     try {
         const { env } = await getCloudflareContext();
         const resolvedParams = await params;
         const slug = resolvedParams.slug.join('/');
-        
+
         if (!env.BLOG_STORAGE) {
             return NextResponse.json({ error: 'Storage not configured' }, { status: 500 });
         }
@@ -18,23 +20,29 @@ export async function POST(
         // Get raw HTML from R2
         const basePath = `blogs/${slug}`;
         const htmlObj = await env.BLOG_STORAGE.get(`${basePath}/raw.html`);
-        
+
         if (!htmlObj) {
-            return NextResponse.json({ 
-                error: 'Raw HTML not found. Fetch HTML first.',
-                path: `${basePath}/raw.html`
-            }, { status: 404 });
+            return NextResponse.json(
+                {
+                    error: 'Raw HTML not found. Fetch HTML first.',
+                    path: `${basePath}/raw.html`,
+                },
+                { status: 404 },
+            );
         }
 
         const html = await htmlObj.text();
-        
+
         // Parse the article
         const article = parseArticle(html);
 
         if (!article || !article.title) {
-            return NextResponse.json({ 
-                error: 'Failed to parse article or article is invalid'
-            }, { status: 400 });
+            return NextResponse.json(
+                {
+                    error: 'Failed to parse article or article is invalid',
+                },
+                { status: 400 },
+            );
         }
 
         // Store parsed article to R2
@@ -54,17 +62,16 @@ export async function POST(
                 tags: article.tags,
                 readingTime: article.readingTime,
                 heroImage: article.heroImage,
-                contentLength: article.content.length
-            }
+                contentLength: article.content.length,
+            },
         });
-
     } catch (error) {
         return NextResponse.json(
-            { 
+            {
                 error: 'Internal server error',
-                details: error instanceof Error ? error.message : 'Unknown error'
-            }, 
-            { status: 500 }
+                details: error instanceof Error ? error.message : 'Unknown error',
+            },
+            { status: 500 },
         );
     }
 }

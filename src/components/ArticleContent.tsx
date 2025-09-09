@@ -177,7 +177,6 @@ function renderContentBlock(block: ContentBlock, index: number): React.JSX.Eleme
                 </figure>
             );
 
-
         default:
             // Fallback for unknown types
             return (

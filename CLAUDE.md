@@ -12,11 +12,11 @@ we'll use the Blog Post "Cloudy Summarizations of Email Detections: Beta Announc
 
 The web app is really simple: the homepage shows the title and an input bar where the user can paste a URL to an article in the cloudflare blog.
 
-On submit the page should navigate to the same path in our domain, so for the above example the page will navigate to `https://blog-cloudflare-audio.dsfapps.workers.dev/cloudy-driven-email-security-summaries/`
+On submit the page should navigate to the same path in our domain under the `/blog`, so for the above example the page will navigate to `https://blog-cloudflare-audio.dsfapps.workers.dev/blog/cloudy-driven-email-security-summaries/`
 
 ### The generic article route
 
-Our web app only has two routes: the homepage and the catch-all *also called* `generic article route`. When a generic article route loads, the worker needs to fetch the original article. The part that we need is in an article tag, I've created a sample under `article-sample.html`. The worker saves the fetched html in an `R2` bucket, triggers the audio and summarization flows and simultaneously renders the article so the page loads fast. There are a few considerations here:
+Our web app only has two routes: the homepage and the catch-all _also called_ `generic article route`. When a generic article route loads, the worker needs to fetch the original article. The part that we need is in an article tag, I've created a sample under `article-sample.html`. The worker saves the fetched html in an `R2` bucket, triggers the audio and summarization flows and simultaneously renders the article so the page loads fast. There are a few considerations here:
 
 1. The HTML for the article is "orphaned" i.e. it misses the styles defined in the cloudflare blog site.
 2. It also seems to be using tailwind styles that won't take effect if we just render it as normal HTML (not sure about this one, but this is my understanding).
@@ -48,9 +48,11 @@ We need to set up an `R2` binding in `wrangler.jsonc` and also create it remotel
 The name of the bucket will be `blog-cloudflare-listen` and the path to the blog posts will be `blogs`.
 
 Each post will have the name of their url path, so to keep using or example from above, the path to the files in the `R2` bucket for the "Cloudy Summarizations of Email Detections: Beta Announcement" will be:
+
 - `/blogs/cloudy-driven-email-security-summaries/` in the `blog-cloudflare-listen` `R2` bucket
 
 **Storage structure during audio generation:**
+
 ```
 blogs/cloudy-driven-email-security-summaries/
 ├── raw.html              # Original HTML
@@ -85,12 +87,14 @@ Generally I'd outsource the generation of the audio and the summary to a queue o
 - you may use the links in this file to understand the syntax, parameters, inputs and outputs of the models to use.
 - for any information not contained in this document or otherwise linked in this repo, you may use the `Ref` MCP to research docs. If you don't find the information you're looking for you may use your Web Search tool. Make sure to state beforehand which information you're going to look for, so that you can asses when to stop researching.
 - Never read the `cloudflare-env.d.ts` file.
+- don't use literal quotes in HTML, the linter will complain and the build will fail. use the escaped variant (e.g. `&quot;`)
 
 ## Current Architecture
 
 ### Chunked Audio Generation System
 
 **Resilient chunked approach** in `src/lib/workers-ai.ts` and `src/lib/audio-chunk-manager.ts`:
+
 1. Text >1250 characters automatically split into sentence-based chunks
 2. All chunks generated in parallel using `Promise.allSettled` for maximum resilience
 3. Individual chunks stored in R2 as `audio-chunk-{index}.mp3`
@@ -103,35 +107,38 @@ Generally I'd outsource the generation of the audio and the summary to a queue o
 **TanStack Query integration** eliminates manual fetch logic and provides automatic retries:
 
 - **`src/hooks/useAudioData.ts`** - Audio fetching with:
-  - Automatic retries: 30s, 1min, 2min, 5min delays (prevents rate limiting)
-  - Background refetching for incomplete chunks every 30 seconds
-  - Smart caching with 5-minute stale time
+    - Automatic retries: 30s, 1min, 2min, 5min delays (prevents rate limiting)
+    - Background refetching for incomplete chunks every 30 seconds
+    - Smart caching with 5-minute stale time
 
 - **`src/hooks/useSummaryData.ts`** - Summary fetching with:
-  - Infinite stale time (summaries don't change once generated)
-  - Automatic error handling and retries
+    - Infinite stale time (summaries don't change once generated)
+    - Automatic error handling and retries
 
 **Why React Query:** Eliminates complex manual retry logic, provides automatic background updates, built-in caching, and better error handling.
 
 ### Audio API Behavior
 
 The `/api/audio/{slug}` endpoint logic:
+
 1. **Check complete audio**: Return `audio.mp3` if exists (200 OK)
 2. **Check chunked audio**: Assemble contiguous chunks if available
 3. **Generate missing chunks**: Always attempt to fill gaps automatically
 4. **Return response**:
-   - 200 OK for complete audio
-   - 206 Partial Content for incomplete with progress headers
-   - Headers include chunk status: `X-Audio-Status`, `X-Total-Chunks`, etc.
+    - 200 OK for complete audio
+    - 206 Partial Content for incomplete with progress headers
+    - Headers include chunk status: `X-Audio-Status`, `X-Total-Chunks`, etc.
 
 ### Troubleshooting Audio Issues
 
 **If audio doesn't play properly:**
+
 - Check browser console for chunk status headers
 - Verify chunks are loading in sequence (0,1,2,3...)
 - React Query will auto-retry missing chunks after 30+ second delays
 
 **If audio generation fails:**
+
 - Check `src/lib/audio-debug-helpers.ts` logs for detailed error analysis
 - Individual chunk failures are logged but don't stop other chunks
 - Complete failure returns 500 with comprehensive debugging info
@@ -140,5 +147,3 @@ The `/api/audio/{slug}` endpoint logic:
 
 - `bun run build` - Build and type-check the application
 - `bun run lint` - Run ESLint checks
-- `bun run dev` - Start development server
-- `bun run cf:build` - Build for Cloudflare deployment

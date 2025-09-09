@@ -22,16 +22,16 @@ interface ArticleDisplayProps {
     initialSummary: string[] | null;
 }
 
-export default function ArticleDisplay({
-    article,
-    slug,
-    initialSummary,
-}: ArticleDisplayProps) {
+export default function ArticleDisplay({ article, slug, initialSummary }: ArticleDisplayProps) {
     const [showSummary, setShowSummary] = useState(false);
-    
+
     // Use React Query for summary data fetching
-    const { data: summaryData, isLoading: isSummaryLoading, error: summaryError } = useSummaryData(slug);
-    
+    const {
+        data: summaryData,
+        isLoading: isSummaryLoading,
+        error: summaryError,
+    } = useSummaryData(slug);
+
     // Use React Query data or fallback to initial summary
     const summaries = summaryData?.summaries || initialSummary;
 
@@ -149,10 +149,7 @@ export default function ArticleDisplay({
                 <Card className="mb-8 p-6">
                     <div className="flex flex-col gap-4 sm:flex-row">
                         <div className="flex-1">
-                            <AudioPlayer
-                                slug={slug}
-                                title={article.title}
-                            />
+                            <AudioPlayer slug={slug} title={article.title} />
                         </div>
 
                         <div className="flex flex-col gap-2">
@@ -166,9 +163,7 @@ export default function ArticleDisplay({
                                 {isSummaryLoading ? 'Generating Summary...' : 'Read Summary'}
                             </Button>
                             {summaryError && (
-                                <p className="text-xs text-red-500">
-                                    {summaryError.message}
-                                </p>
+                                <p className="text-xs text-red-500">{summaryError.message}</p>
                             )}
                         </div>
                     </div>

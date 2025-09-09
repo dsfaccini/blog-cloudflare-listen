@@ -23,21 +23,22 @@ export function useAudioData(slug: string) {
         queryKey: ['audio', slug],
         queryFn: async (): Promise<AudioData> => {
             const response = await fetch(`/api/audio/${slug}`);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
+
             // Parse headers for chunk information
             const audioStatus = response.headers.get('X-Audio-Status');
             const totalChunks = parseInt(response.headers.get('X-Total-Chunks') || '0');
             const availableChunks = parseInt(response.headers.get('X-Available-Chunks') || '0');
             const missingChunksHeader = response.headers.get('X-Missing-Chunks');
             const contentLength = parseInt(response.headers.get('Content-Length') || '0');
-            
-            const missingChunks = missingChunksHeader && missingChunksHeader !== 'none'
-                ? missingChunksHeader.split(',')
-                : [];
+
+            const missingChunks =
+                missingChunksHeader && missingChunksHeader !== 'none'
+                    ? missingChunksHeader.split(',')
+                    : [];
 
             const chunkInfo: AudioChunkInfo = {
                 isComplete: audioStatus === 'complete',

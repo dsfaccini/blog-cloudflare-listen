@@ -13,7 +13,7 @@ export async function GET(
 ) {
     const resolvedParams = await params;
     const slug = resolvedParams.slug.join('/');
-    
+
     try {
         const { env } = await getCloudflareContext();
 
@@ -113,13 +113,13 @@ export async function GET(
 
         if (!result.audio) {
             const errorDetails = createErrorDetails(
-                new Error('Complete audio generation failure - no chunks completed'), 
+                new Error('Complete audio generation failure - no chunks completed'),
                 {
                     slug,
                     totalChunks: result.totalChunks,
                     failedChunks: result.missingChunks,
-                    context: 'resilient-audio-generation'
-                }
+                    context: 'resilient-audio-generation',
+                },
             );
 
             console.error('🚨 COMPLETE AUDIO GENERATION FAILURE:');
@@ -136,15 +136,15 @@ export async function GET(
                         totalChunks: result.totalChunks,
                         failedChunks: result.missingChunks,
                         successfulChunks: result.availableChunks,
-                        failureRate: '100%'
+                        failureRate: '100%',
                     },
                     recommendations: [
                         'Check if AI service is operational',
                         'Verify text content is valid and not too long',
                         'Try with a shorter article or different content',
                         'Check rate limits and quotas',
-                        'Wait a few minutes and retry'
-                    ]
+                        'Wait a few minutes and retry',
+                    ],
                 },
                 { status: 500 },
             );
@@ -169,12 +169,12 @@ export async function GET(
         });
     } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
-        
+
         // Create comprehensive error details for debugging
         const errorDetails = createErrorDetails(err, {
             slug: slug,
             totalChunks: 0, // Will be filled if known
-            context: 'audio-api-route'
+            context: 'audio-api-route',
         });
 
         console.error('🚨 AUDIO API ERROR - Full debugging details:');
@@ -193,16 +193,16 @@ export async function GET(
                         '2. Verify the article exists and has content',
                         '3. Check if AI service is available and within quotas',
                         '4. Try again - some failures are transient',
-                        '5. Check server logs for more detailed error information'
+                        '5. Check server logs for more detailed error information',
                     ],
                     commonCauses: [
                         'AI model timeout (>30s)',
                         'AI service temporarily unavailable',
                         'Text too long or contains unsupported content',
                         'Rate limiting or quota exceeded',
-                        'Network connectivity issues'
-                    ]
-                }
+                        'Network connectivity issues',
+                    ],
+                },
             },
             { status: 500 },
         );

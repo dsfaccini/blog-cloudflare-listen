@@ -23,7 +23,7 @@ Created a TTS test page at `/tts-test` that allows side-by-side comparison of di
 - tried prepending "Heading:" to headings, didn't work
 - tried adding ssml `<break time="200ms"/>` tags but aura-1 doesn't honor them
     - didn't wrap the whole text in `<speak>` tags, aura-1 supposedly doesn't support ssml so who knows
-- adding a hyphen ` — ` works to create a pause (the model generates a breathing sound it seems...)
+- adding a hyphen `—` works to create a pause (the model generates a breathing sound it seems...)
     - so I appended a hyphen to each heading and list item, and once before every list
 
 ### Summary

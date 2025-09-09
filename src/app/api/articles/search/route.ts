@@ -1,5 +1,7 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+
 import { NextResponse } from 'next/server';
+
 import { getArticleIndex } from '@/lib/index-manager';
 
 export async function GET() {
@@ -11,7 +13,7 @@ export async function GET() {
         }
 
         const index = await getArticleIndex(env);
-        
+
         return NextResponse.json(index);
     } catch (error) {
         console.error('Error fetching article index:', error);

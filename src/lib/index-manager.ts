@@ -21,31 +21,34 @@ export interface ArticleData {
 /**
  * Updates the article index in R2 by adding or updating an article entry
  */
-export async function updateArticleIndex(env: { BLOG_STORAGE: R2Bucket }, articleData: ArticleData): Promise<void> {
+export async function updateArticleIndex(
+    env: { BLOG_STORAGE: R2Bucket },
+    articleData: ArticleData,
+): Promise<void> {
     try {
         // Fetch current index from R2 or create new one
         const indexObj = await env.BLOG_STORAGE.get('blogs/index.json');
-        const index: ArticleIndex = indexObj 
-            ? JSON.parse(await indexObj.text()) 
+        const index: ArticleIndex = indexObj
+            ? JSON.parse(await indexObj.text())
             : { articles: [], version: 1, lastUpdated: new Date().toISOString() };
-        
+
         // Add/update article entry
-        const existingIndex = index.articles.findIndex(a => a.slug === articleData.slug);
+        const existingIndex = index.articles.findIndex((a) => a.slug === articleData.slug);
         if (existingIndex >= 0) {
             index.articles[existingIndex] = articleData;
         } else {
             index.articles.push(articleData);
         }
-        
+
         // Sort articles alphabetically by title
         index.articles.sort((a, b) => a.title.localeCompare(b.title));
-        
+
         // Update metadata
         index.lastUpdated = new Date().toISOString();
-        
+
         // Save back to R2
         await env.BLOG_STORAGE.put('blogs/index.json', JSON.stringify(index, null, 2));
-        
+
         console.log(`Updated article index with: ${articleData.slug}`);
     } catch (error) {
         console.error('Error updating article index:', error);
@@ -58,11 +61,11 @@ export async function updateArticleIndex(env: { BLOG_STORAGE: R2Bucket }, articl
  */
 export async function initializeIndex(env: { BLOG_STORAGE: R2Bucket }): Promise<ArticleIndex> {
     console.log('Initializing article index from existing articles...');
-    
+
     try {
         // List all articles in the blogs folder
         const listResult = await env.BLOG_STORAGE.list({ prefix: 'blogs/' });
-        
+
         // Extract unique slugs from the keys
         const slugs = new Set<string>();
         for (const object of listResult.objects) {
@@ -79,7 +82,7 @@ export async function initializeIndex(env: { BLOG_STORAGE: R2Bucket }): Promise<
             const emptyIndex: ArticleIndex = {
                 articles: [],
                 lastUpdated: new Date().toISOString(),
-                version: 1
+                version: 1,
             };
             await env.BLOG_STORAGE.put('blogs/index.json', JSON.stringify(emptyIndex, null, 2));
             return emptyIndex;
@@ -87,7 +90,7 @@ export async function initializeIndex(env: { BLOG_STORAGE: R2Bucket }): Promise<
 
         // Fetch article.json for each article
         const articles: RandomArticle[] = [];
-        
+
         for (const slug of allSlugs) {
             try {
                 const articleObj = await env.BLOG_STORAGE.get(`blogs/${slug}/article.json`);
@@ -98,7 +101,7 @@ export async function initializeIndex(env: { BLOG_STORAGE: R2Bucket }): Promise<
                         title: articleData.title || 'Untitled',
                         date: articleData.date || 'Unknown date',
                         description: articleData.description,
-                        authors: articleData.authors || []
+                        authors: articleData.authors || [],
                     });
                 }
             } catch (error) {
@@ -114,14 +117,13 @@ export async function initializeIndex(env: { BLOG_STORAGE: R2Bucket }): Promise<
         const index: ArticleIndex = {
             articles,
             lastUpdated: new Date().toISOString(),
-            version: 1
+            version: 1,
         };
 
         await env.BLOG_STORAGE.put('blogs/index.json', JSON.stringify(index, null, 2));
-        
+
         console.log(`Initialized article index with ${articles.length} articles`);
         return index;
-        
     } catch (error) {
         console.error('Error initializing article index:', error);
         throw error;
@@ -134,12 +136,12 @@ export async function initializeIndex(env: { BLOG_STORAGE: R2Bucket }): Promise<
 export async function getArticleIndex(env: { BLOG_STORAGE: R2Bucket }): Promise<ArticleIndex> {
     try {
         const indexObj = await env.BLOG_STORAGE.get('blogs/index.json');
-        
+
         if (!indexObj) {
             // Index doesn't exist, initialize it
             return await initializeIndex(env);
         }
-        
+
         return JSON.parse(await indexObj.text());
     } catch (error) {
         console.error('Error getting article index:', error);

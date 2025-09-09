@@ -27,14 +27,14 @@
     "r2_buckets": [
         {
             "binding": "BLOG_STORAGE",
-            "bucket_name": "blog-cloudflare-listen"
-        }
+            "bucket_name": "blog-cloudflare-listen",
+        },
     ],
     /**
      * Cloudflare Workers AI
      * Used for text-to-speech and text summarization
      */
     "ai": {
-        "binding": "AI"
-    }
+        "binding": "AI",
+    },
 }

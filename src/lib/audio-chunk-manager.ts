@@ -85,10 +85,12 @@ export async function getAudioChunkStatus(
                     break;
                 }
             }
-            
+
             if (contiguousChunks.length > 0) {
                 availableAudio = combineAudioChunks(contiguousChunks);
-                console.log(`Combined ${contiguousChunks.length} contiguous chunks (out of ${availableChunks.length} available)`);
+                console.log(
+                    `Combined ${contiguousChunks.length} contiguous chunks (out of ${availableChunks.length} available)`,
+                );
             }
         }
 

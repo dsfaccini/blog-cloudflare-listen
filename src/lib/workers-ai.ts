@@ -7,11 +7,7 @@ import {
     storeCompleteAudio,
     updateChunkMetadata,
 } from './audio-chunk-manager';
-import {
-    validateAudioResponse,
-    logSuccessfulChunk,
-    logChunkFailure
-} from './audio-debug-helpers';
+import { logChunkFailure, logSuccessfulChunk, validateAudioResponse } from './audio-debug-helpers';
 
 const MAX_CHUNK_SIZE = 1250; // Reduced limit for better reliability
 
@@ -33,10 +29,10 @@ export async function generateAudio(text: string): Promise<ArrayBuffer> {
         return generateAudioWithChunking(text);
     }
 
-    const context = { 
-        textLength: text.length, 
+    const context = {
+        textLength: text.length,
         textPreview: text.substring(0, 100),
-        attempt: 1 
+        attempt: 1,
     };
 
     try {
@@ -54,12 +50,14 @@ export async function generateAudio(text: string): Promise<ArrayBuffer> {
         );
 
         const audioBuffer = await validateAudioResponse(response, context);
-        
+
         console.log(`✅ Single audio generated successfully: ${audioBuffer.byteLength} bytes`);
         return audioBuffer;
-        
     } catch (error) {
-        console.error('❌ Single audio generation failed:', error instanceof Error ? error.message : error);
+        console.error(
+            '❌ Single audio generation failed:',
+            error instanceof Error ? error.message : error,
+        );
         console.error('Context:', context);
         throw error;
     }
@@ -106,7 +104,7 @@ async function generateAudioWithChunking(text: string): Promise<ArrayBuffer> {
             textLength: chunk.length,
             textPreview: chunk.substring(0, 100),
             totalChunks: chunks.length,
-            attempt: 1
+            attempt: 1,
         };
 
         try {
@@ -123,7 +121,11 @@ async function generateAudioWithChunking(text: string): Promise<ArrayBuffer> {
 
             return await validateAudioResponse(response, context);
         } catch (error) {
-            logChunkFailure(index, error instanceof Error ? error : new Error(String(error)), context);
+            logChunkFailure(
+                index,
+                error instanceof Error ? error : new Error(String(error)),
+                context,
+            );
             throw error;
         }
     });
@@ -208,15 +210,19 @@ export async function generateAudioResilient(
             textPreview: chunkText?.substring(0, 100) || '',
             totalChunks: textChunks.length,
             attempt: 1,
-            slug
+            slug,
         };
 
         try {
             if (!chunkText) {
-                throw new Error(`No text available for chunk ${chunkIndex} - textChunks array may be corrupted`);
+                throw new Error(
+                    `No text available for chunk ${chunkIndex} - textChunks array may be corrupted`,
+                );
             }
 
-            console.log(`🎵 Generating chunk ${chunkIndex}/${textChunks.length} (${chunkText.length} chars, attempt ${context.attempt})...`);
+            console.log(
+                `🎵 Generating chunk ${chunkIndex}/${textChunks.length} (${chunkText.length} chars, attempt ${context.attempt})...`,
+            );
 
             const response = await env.AI.run(
                 // @ts-expect-error the model was already released but the sdk hasn't been updated
@@ -226,7 +232,7 @@ export async function generateAudioResilient(
                     gateway: {
                         id: 'audio-blog-gateway',
                     },
-                }
+                },
             );
 
             // Validate response with detailed error info
@@ -249,7 +255,7 @@ export async function generateAudioResilient(
                 audio: null,
                 success: false,
                 error: err.message,
-                context
+                context,
             };
         }
     });
@@ -316,6 +322,34 @@ function splitTextIntoChunks(text: string): string[] {
     return chunks;
 }
 
+const summarizeWithLora = async (text: string) => {
+    const { env } = await getCloudflareContext();
+    // https://developers.cloudflare.com/workers-ai/models/mistral-7b-instruct-v0.2-lora/
+    const stream = await env.AI.run('@cf/mistral/mistral-7b-instruct-v0.2-lora', {
+        stream: true,
+        raw: true,
+        lora: 'cf-public-cnn-summarization',
+        messages: [
+            {
+                role: 'system',
+                content: 'You are a helpful assistant that summarizes articles.',
+            },
+            {
+                role: 'user',
+                content: `Summarize the following article:
+
+<article_to_summarize>
+${text}
+</article_to_summarize>
+
+Summary:`,
+            },
+        ],
+    });
+
+    return stream;
+};
+
 /**
  * Generates a summary of the provided text using Cloudflare Workers AI Llama 3.2 model
  * @param text - The text to summarize
@@ -330,7 +364,7 @@ export async function generateSummary(text: string, maxLength = 100): Promise<st
     }
 
     const trimmedText = text.trim();
-    
+
     // Check if text is empty or too short to meaningfully summarize
     if (!trimmedText || trimmedText.length < 20) {
         return `No summarization possible: ${trimmedText}`;
@@ -408,12 +442,12 @@ export async function generateParagraphSummaries(paragraphs: string[]): Promise<
     });
 
     const summaries = await Promise.all(summaryPromises);
-    
+
     // Filter out null values and maintain array structure
-    const filteredSummaries = summaries.map((summary, index) => 
-        summary !== null ? summary : paragraphs[index]
+    const filteredSummaries = summaries.map((summary, index) =>
+        summary !== null ? summary : paragraphs[index],
     );
-    
+
     console.log(`Generated ${filteredSummaries.length} summaries in parallel`);
 
     return filteredSummaries;

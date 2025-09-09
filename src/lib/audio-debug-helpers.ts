@@ -1,6 +1,6 @@
 /**
  * Audio Debug Helpers
- * 
+ *
  * Utilities for debugging audio generation failures with detailed error information
  * instead of useless generic error messages.
  */
@@ -24,7 +24,10 @@ interface ErrorAnalysis {
 /**
  * Validate and debug AI audio responses with detailed error information
  */
-export async function validateAudioResponse(response: unknown, context: AudioGenerationContext): Promise<ArrayBuffer> {
+export async function validateAudioResponse(
+    response: unknown,
+    context: AudioGenerationContext,
+): Promise<ArrayBuffer> {
     // Handle ArrayBuffer (legacy response format)
     if (response instanceof ArrayBuffer) {
         return response;
@@ -33,8 +36,10 @@ export async function validateAudioResponse(response: unknown, context: AudioGen
     // Handle ReadableStream (new response format)
     if (response instanceof ReadableStream) {
         try {
-            console.log(`📥 Converting ReadableStream to ArrayBuffer for chunk ${context.chunkIndex || 'single'}...`);
-            
+            console.log(
+                `📥 Converting ReadableStream to ArrayBuffer for chunk ${context.chunkIndex || 'single'}...`,
+            );
+
             // Convert ReadableStream to ArrayBuffer
             const reader = response.getReader();
             const chunks: Uint8Array[] = [];
@@ -43,7 +48,7 @@ export async function validateAudioResponse(response: unknown, context: AudioGen
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                
+
                 chunks.push(value);
                 totalLength += value.length;
             }
@@ -56,25 +61,30 @@ export async function validateAudioResponse(response: unknown, context: AudioGen
                 offset += chunk.length;
             }
 
-            console.log(`✅ Converted ReadableStream to ArrayBuffer: ${combined.buffer.byteLength} bytes`);
+            console.log(
+                `✅ Converted ReadableStream to ArrayBuffer: ${combined.buffer.byteLength} bytes`,
+            );
             return combined.buffer;
-            
         } catch (streamError) {
             console.error('❌ Failed to convert ReadableStream:', streamError);
-            throw new Error(`Failed to convert ReadableStream to ArrayBuffer: ${streamError instanceof Error ? streamError.message : 'Unknown error'}`);
+            throw new Error(
+                `Failed to convert ReadableStream to ArrayBuffer: ${streamError instanceof Error ? streamError.message : 'Unknown error'}`,
+            );
         }
     }
 
     // Analyze other response types (errors)
     const analysis = analyzeFailedResponse(response, context);
-    
+
     // Log detailed error information
     console.error('🚨 AUDIO GENERATION FAILED - DETAILED ANALYSIS:');
     console.error('Context:', context);
     console.error('Response Analysis:', analysis);
-    console.error('Raw Response (first 1000 chars):', 
-        typeof response === 'string' ? response.substring(0, 1000) :
-        JSON.stringify(response, null, 2).substring(0, 1000)
+    console.error(
+        'Raw Response (first 1000 chars):',
+        typeof response === 'string'
+            ? response.substring(0, 1000)
+            : JSON.stringify(response, null, 2).substring(0, 1000),
     );
 
     // Throw a helpful error message
@@ -86,7 +96,7 @@ export async function validateAudioResponse(response: unknown, context: AudioGen
  */
 function analyzeFailedResponse(response: unknown, context: AudioGenerationContext): ErrorAnalysis {
     const chunkInfo = context.chunkIndex !== undefined ? ` (Chunk ${context.chunkIndex})` : '';
-    
+
     // Check for null/undefined
     if (response === null) {
         return {
@@ -96,8 +106,8 @@ function analyzeFailedResponse(response: unknown, context: AudioGenerationContex
             suggestions: [
                 'Check if AI service is available',
                 'Retry with shorter text',
-                'Check rate limits'
-            ]
+                'Check rate limits',
+            ],
         };
     }
 
@@ -109,18 +119,21 @@ function analyzeFailedResponse(response: unknown, context: AudioGenerationContex
             suggestions: [
                 'Check network connectivity',
                 'Verify AI binding configuration',
-                'Check for API endpoint issues'
-            ]
+                'Check for API endpoint issues',
+            ],
         };
     }
 
     // Check for error objects
     if (typeof response === 'object' && response !== null) {
         const errorObj = response as Record<string, unknown>;
-        
+
         // Standard error format
         if ('error' in errorObj) {
-            const errorMessage = typeof errorObj.error === 'string' ? errorObj.error : JSON.stringify(errorObj.error);
+            const errorMessage =
+                typeof errorObj.error === 'string'
+                    ? errorObj.error
+                    : JSON.stringify(errorObj.error);
             return {
                 type: 'API_ERROR',
                 message: `AI API Error${chunkInfo}: ${errorMessage}`,
@@ -128,8 +141,8 @@ function analyzeFailedResponse(response: unknown, context: AudioGenerationContex
                 suggestions: [
                     'Check if text length is within limits',
                     'Verify model availability',
-                    'Check API quotas and rate limits'
-                ]
+                    'Check API quotas and rate limits',
+                ],
             };
         }
 
@@ -143,13 +156,17 @@ function analyzeFailedResponse(response: unknown, context: AudioGenerationContex
                 suggestions: [
                     'Check the specific error details above',
                     'Reduce text complexity if needed',
-                    'Try again with different parameters'
-                ]
+                    'Try again with different parameters',
+                ],
             };
         }
 
         // Check for timeout indicators
-        if ('timeout' in errorObj || 'TimeoutError' in errorObj || errorObj.constructor?.name === 'TimeoutError') {
+        if (
+            'timeout' in errorObj ||
+            'TimeoutError' in errorObj ||
+            errorObj.constructor?.name === 'TimeoutError'
+        ) {
             return {
                 type: 'TIMEOUT_ERROR',
                 message: `AI Request Timeout${chunkInfo}: Request took too long to complete`,
@@ -157,8 +174,8 @@ function analyzeFailedResponse(response: unknown, context: AudioGenerationContex
                 suggestions: [
                     'Reduce text length for this chunk',
                     'Retry the request',
-                    'Check server load/capacity'
-                ]
+                    'Check server load/capacity',
+                ],
             };
         }
 
@@ -166,24 +183,24 @@ function analyzeFailedResponse(response: unknown, context: AudioGenerationContex
         return {
             type: 'UNEXPECTED_OBJECT',
             message: `AI returned unexpected object${chunkInfo}: Expected ArrayBuffer, got object with keys: ${Object.keys(errorObj).join(', ')}`,
-            details: { 
-                response: errorObj, 
+            details: {
+                response: errorObj,
                 context,
                 objectKeys: Object.keys(errorObj),
-                objectConstructor: errorObj.constructor?.name
+                objectConstructor: errorObj.constructor?.name,
             },
             suggestions: [
                 'Check AI model configuration',
                 'Verify request parameters',
-                'Check for model updates or changes'
-            ]
+                'Check for model updates or changes',
+            ],
         };
     }
 
     // Check for string responses (might contain error info)
     if (typeof response === 'string') {
         const lowerResponse = response.toLowerCase();
-        
+
         if (lowerResponse.includes('timeout') || lowerResponse.includes('timed out')) {
             return {
                 type: 'TIMEOUT_STRING',
@@ -192,8 +209,8 @@ function analyzeFailedResponse(response: unknown, context: AudioGenerationContex
                 suggestions: [
                     'Reduce chunk size',
                     'Retry with exponential backoff',
-                    'Check service status'
-                ]
+                    'Check service status',
+                ],
             };
         }
 
@@ -205,8 +222,8 @@ function analyzeFailedResponse(response: unknown, context: AudioGenerationContex
                 suggestions: [
                     'Check the error message details',
                     'Verify input text format',
-                    'Try different model parameters'
-                ]
+                    'Try different model parameters',
+                ],
             };
         }
 
@@ -217,8 +234,8 @@ function analyzeFailedResponse(response: unknown, context: AudioGenerationContex
             suggestions: [
                 'Check if using correct AI model',
                 'Verify model supports audio generation',
-                'Check request format and parameters'
-            ]
+                'Check request format and parameters',
+            ],
         };
     }
 
@@ -226,33 +243,41 @@ function analyzeFailedResponse(response: unknown, context: AudioGenerationContex
     return {
         type: 'UNKNOWN_TYPE',
         message: `AI returned unexpected type${chunkInfo}: Expected ArrayBuffer, got ${typeof response}`,
-        details: { 
-            response, 
+        details: {
+            response,
             context,
             responseType: typeof response,
-            responseConstructor: (response as Record<string, unknown>)?.constructor?.name
+            responseConstructor: (response as Record<string, unknown>)?.constructor?.name,
         },
         suggestions: [
             'Check AI service configuration',
             'Verify model compatibility',
-            'Check for service interruptions'
-        ]
+            'Check for service interruptions',
+        ],
     };
 }
 
 /**
  * Create a timeout promise for AI requests
  */
-export function createTimeoutPromise(timeoutMs: number, context: AudioGenerationContext): Promise<never> {
+export function createTimeoutPromise(
+    timeoutMs: number,
+    context: AudioGenerationContext,
+): Promise<never> {
     return new Promise((_, reject) => {
         setTimeout(() => {
-            const chunkInfo = context.chunkIndex !== undefined ? ` for chunk ${context.chunkIndex}` : '';
+            const chunkInfo =
+                context.chunkIndex !== undefined ? ` for chunk ${context.chunkIndex}` : '';
             const textInfo = context.textLength ? ` (${context.textLength} chars)` : '';
-            
+
             console.error(`⏰ TIMEOUT: AI request${chunkInfo}${textInfo} exceeded ${timeoutMs}ms`);
             console.error('Timeout Context:', context);
-            
-            reject(new Error(`TIMEOUT: AI request${chunkInfo} took longer than ${timeoutMs}ms. Text length: ${context.textLength || 'unknown'} chars`));
+
+            reject(
+                new Error(
+                    `TIMEOUT: AI request${chunkInfo} took longer than ${timeoutMs}ms. Text length: ${context.textLength || 'unknown'} chars`,
+                ),
+            );
         }, timeoutMs);
     });
 }
@@ -260,9 +285,15 @@ export function createTimeoutPromise(timeoutMs: number, context: AudioGeneration
 /**
  * Log successful chunk generation with context
  */
-export function logSuccessfulChunk(chunkIndex: number, audioSize: number, context: AudioGenerationContext): void {
-    console.log(`✅ Chunk ${chunkIndex} SUCCESS: Generated ${audioSize} bytes from ${context.textLength || 'unknown'} chars`);
-    
+export function logSuccessfulChunk(
+    chunkIndex: number,
+    audioSize: number,
+    context: AudioGenerationContext,
+): void {
+    console.log(
+        `✅ Chunk ${chunkIndex} SUCCESS: Generated ${audioSize} bytes from ${context.textLength || 'unknown'} chars`,
+    );
+
     if (context.attempt && context.attempt > 1) {
         console.log(`   └─ Succeeded on attempt ${context.attempt}`);
     }
@@ -271,18 +302,22 @@ export function logSuccessfulChunk(chunkIndex: number, audioSize: number, contex
 /**
  * Log chunk failure with detailed context
  */
-export function logChunkFailure(chunkIndex: number, error: Error, context: AudioGenerationContext): void {
+export function logChunkFailure(
+    chunkIndex: number,
+    error: Error,
+    context: AudioGenerationContext,
+): void {
     console.error(`❌ Chunk ${chunkIndex} FAILED:`);
     console.error(`   ├─ Error: ${error.message}`);
     console.error(`   ├─ Text length: ${context.textLength || 'unknown'} chars`);
     console.error(`   ├─ Text preview: "${context.textPreview?.substring(0, 100) || 'N/A'}..."`);
-    
+
     if (context.attempt) {
         console.error(`   ├─ Attempt: ${context.attempt}`);
     }
-    
+
     console.error(`   └─ Full context:`, context);
-    
+
     // Log stack trace in development
     if (process.env.NODE_ENV === 'development' && error.stack) {
         console.error('   └─ Stack trace:', error.stack);
@@ -292,12 +327,15 @@ export function logChunkFailure(chunkIndex: number, error: Error, context: Audio
 /**
  * Create comprehensive error details for API responses
  */
-export function createErrorDetails(error: Error, context: AudioGenerationContext & {
-    successfulChunks?: number[];
-    failedChunks?: number[];
-    totalAttempts?: number;
-    context?: string;
-}): Record<string, unknown> {
+export function createErrorDetails(
+    error: Error,
+    context: AudioGenerationContext & {
+        successfulChunks?: number[];
+        failedChunks?: number[];
+        totalAttempts?: number;
+        context?: string;
+    },
+): Record<string, unknown> {
     return {
         message: error.message,
         timestamp: new Date().toISOString(),
@@ -307,19 +345,19 @@ export function createErrorDetails(error: Error, context: AudioGenerationContext
             totalChunks: context.totalChunks,
             textLength: context.textLength,
             attempt: context.attempt,
-            totalAttempts: context.totalAttempts
+            totalAttempts: context.totalAttempts,
         },
         chunkStatus: {
             successful: context.successfulChunks || [],
             failed: context.failedChunks || [],
             successCount: context.successfulChunks?.length || 0,
-            failureCount: context.failedChunks?.length || 0
+            failureCount: context.failedChunks?.length || 0,
         },
         debugging: {
             nodeEnv: process.env.NODE_ENV,
             timestamp: Date.now(),
-            userAgent: 'BlogCloudflareListenBot/1.0'
+            userAgent: 'BlogCloudflareListenBot/1.0',
         },
-        stackTrace: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        stackTrace: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     };
 }

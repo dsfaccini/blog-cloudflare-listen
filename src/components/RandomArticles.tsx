@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
 import Link from 'next/link';
-import { Card } from '@/components/ui/card';
+
 import { type RandomArticle } from '@/app/api/articles/random/route';
+import { Card } from '@/components/ui/card';
 
 export default function RandomArticles() {
     const [articles, setArticles] = useState<RandomArticle[]>([]);
@@ -17,7 +19,7 @@ export default function RandomArticles() {
                 if (!response.ok) {
                     throw new Error('Failed to fetch articles');
                 }
-                const data = await response.json() as { articles: RandomArticle[] };
+                const data = (await response.json()) as { articles: RandomArticle[] };
                 setArticles(data.articles || []);
             } catch (error) {
                 console.error('Error fetching random articles:', error);
@@ -33,16 +35,17 @@ export default function RandomArticles() {
     if (loading) {
         return (
             <div className="mt-12">
-                <h2 className="text-2xl font-bold text-white mb-6 text-center">
-                    Recent Articles
-                </h2>
+                <h2 className="mb-6 text-center text-2xl font-bold text-white">Recent Articles</h2>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {[...Array(5)].map((_, i) => (
-                        <Card key={i} className="p-6 bg-white/10 backdrop-blur-sm border-white/20 animate-pulse">
-                            <div className="h-4 bg-white/20 rounded mb-4"></div>
-                            <div className="h-3 bg-white/10 rounded mb-2"></div>
-                            <div className="h-3 bg-white/10 rounded w-3/4 mb-4"></div>
-                            <div className="h-3 bg-white/10 rounded w-1/2"></div>
+                        <Card
+                            key={i}
+                            className="animate-pulse border-white/20 bg-white/10 p-6 backdrop-blur-sm"
+                        >
+                            <div className="mb-4 h-4 rounded bg-white/20"></div>
+                            <div className="mb-2 h-3 rounded bg-white/10"></div>
+                            <div className="mb-4 h-3 w-3/4 rounded bg-white/10"></div>
+                            <div className="h-3 w-1/2 rounded bg-white/10"></div>
                         </Card>
                     ))}
                 </div>
@@ -53,10 +56,8 @@ export default function RandomArticles() {
     if (error) {
         return (
             <div className="mt-12">
-                <h2 className="text-2xl font-bold text-white mb-6 text-center">
-                    Recent Articles
-                </h2>
-                <Card className="p-6 bg-white/10 backdrop-blur-sm border-white/20 text-center">
+                <h2 className="mb-6 text-center text-2xl font-bold text-white">Recent Articles</h2>
+                <Card className="border-white/20 bg-white/10 p-6 text-center backdrop-blur-sm">
                     <p className="text-white/80">{error}</p>
                 </Card>
             </div>
@@ -66,10 +67,8 @@ export default function RandomArticles() {
     if (articles.length === 0) {
         return (
             <div className="mt-12">
-                <h2 className="text-2xl font-bold text-white mb-6 text-center">
-                    Recent Articles
-                </h2>
-                <Card className="p-6 bg-white/10 backdrop-blur-sm border-white/20 text-center">
+                <h2 className="mb-6 text-center text-2xl font-bold text-white">Recent Articles</h2>
+                <Card className="border-white/20 bg-white/10 p-6 text-center backdrop-blur-sm">
                     <p className="text-white/80">No articles available yet</p>
                 </Card>
             </div>
@@ -78,28 +77,24 @@ export default function RandomArticles() {
 
     return (
         <div className="mt-12">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">
-                Recent Articles
-            </h2>
+            <h2 className="mb-6 text-center text-2xl font-bold text-white">Recent Articles</h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {articles.map((article) => (
                     <Link key={article.slug} href={`/blog/${article.slug}`}>
-                        <Card className="p-6 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-colors cursor-pointer h-full">
-                            <h3 className="font-semibold text-white mb-2 line-clamp-2">
+                        <Card className="h-full cursor-pointer border-white/20 bg-white/10 p-6 backdrop-blur-sm transition-colors hover:bg-white/20">
+                            <h3 className="mb-2 line-clamp-2 font-semibold text-white">
                                 {article.title}
                             </h3>
                             {article.description && (
-                                <p className="text-white/70 text-sm mb-4 line-clamp-3">
+                                <p className="mb-4 line-clamp-3 text-sm text-white/70">
                                     {article.description}
                                 </p>
                             )}
                             <div className="mt-auto">
-                                <p className="text-white/60 text-xs">
-                                    {article.date}
-                                </p>
+                                <p className="text-xs text-white/60">{article.date}</p>
                                 {article.authors.length > 0 && (
-                                    <p className="text-white/60 text-xs mt-1">
-                                        by {article.authors.map(a => a.name).join(', ')}
+                                    <p className="mt-1 text-xs text-white/60">
+                                        by {article.authors.map((a) => a.name).join(', ')}
                                     </p>
                                 )}
                             </div>
